@@ -2,15 +2,14 @@ body {
   margin: 0;
   padding: 0;
 }
-.topbar {
+.bottombar {
   position: absolute;
-  width: 100%;
+  width: 88%;
   z-index: 100;
   display: flex;
   justify-content: flex-start;
   .controls {
-    //align-content: flex-end;
-    margin-left: auto;
+    //margin-left: auto;
   }
   div {
     margin: 10px;
@@ -22,9 +21,11 @@ body {
     padding-left: 20px;
   }
 }
+
 .boardContainer {
-  height: 100vh;
-  background-color: #aaa;
+  padding: 50px;
+}
+.gameboard {
   position: relative;
 }
 

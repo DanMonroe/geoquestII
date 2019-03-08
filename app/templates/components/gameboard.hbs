@@ -1,15 +1,4 @@
-<div class="topbar">
-  <div class="controls">
-    [{{ship.x}}:{{ship.y}}]
-    <div class="up"><button {{action move 0 -30}}>&nbsp;Up&nbsp;</button></div>
-    <div>
-      <button {{action move -30 0}}>Left</button>
-      <button {{action move 30 0}}>Right</button>
-    </div>
-    <div class="down"><button {{action move 0 30}}>Down</button></div>
-  </div>
-</div>
-<AnimatedContainer class="boardContainer">
+<AnimatedContainer class="gameboard">
   <div class="board">
     {{#each board.rows as |row|}}
       <div class="row">
@@ -27,3 +16,15 @@
   {{/animated-each}}
 
 </AnimatedContainer>
+
+<div class="bottombar">
+  <div class="controls">
+    <div>Position: [{{ship.x}}:{{ship.y}}]</div>
+    <div class="up"><button {{action buttonMove 0 -1}}>&nbsp;Up&nbsp;</button></div>
+    <div>
+      <button {{action buttonMove -1 0}}>Left</button>
+      <button {{action buttonMove 1 0}}>Right</button>
+    </div>
+    <div class="down"><button {{action buttonMove 0 1}}>Down</button></div>
+  </div>
+</div>

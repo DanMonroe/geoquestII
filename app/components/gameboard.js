@@ -6,6 +6,8 @@ import { A as emberArray } from '@ember/array';
 import { EKMixin } from 'ember-keyboard';
 import { keyDown } from 'ember-keyboard';
 import { on } from '@ember/object/evented';
+import { task, timeout } from 'ember-concurrency';
+
 
 let Ship = EmberObject.extend({
   style: computed('x', 'y', function() {
@@ -15,13 +17,13 @@ let Ship = EmberObject.extend({
 
 const rawboard = [
   [
-    {t:'w a'},{t:'w b'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'}
+    {t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'}
   ],
   [
     {t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'}
   ],
   [
-    {t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'l'}
+    {t:'w'},{t:'l'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'l'}
   ],
   [
     {t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'l'},{t:'l'}
@@ -41,7 +43,7 @@ const board_height = 7;
 
 export default Component.extend( EKMixin,{
 
-  classNames: ['gameboard'],
+  classNames: ['boardContainer'],
 
   showShip: false,
   board: null,
@@ -53,13 +55,6 @@ export default Component.extend( EKMixin,{
   },
 
   buildBoard() {
-    // console.log(board);
-    // for(let y=0; y < board_height; y++) {
-    //   for(let x=0; x < board_width; x++) {
-    //     let boardPiece = board[y][x];
-    //     console.log(boardPiece);
-    //   }
-    // }
     let rows = emberArray();
     for(let row = 0; row < board_height; row++){
 
@@ -90,7 +85,11 @@ export default Component.extend( EKMixin,{
 
   ships: computed(function() {
     let ships = emberArray();
-    ships.push(Ship.create({ id: 1, x: 0, y: 0 }));
+    ships.push(Ship.create({
+      id: 1,
+      x: 3,
+      y: 2
+    }));
 
     return ships;
   }),
@@ -102,25 +101,60 @@ export default Component.extend( EKMixin,{
   }),
 
   up: on(keyDown('ArrowUp'), function() {
-    this.move(0, -1);
+    if(this.get('move.isIdle')) {
+      this.get('move').perform(0, -1);
+    }
   }),
 
   down: on(keyDown('ArrowDown'), function() {
-    this.move(0, 1);
+    if(this.get('move.isIdle')) {
+      this.get('move').perform(0, 1);
+    }
   }),
 
   right: on(keyDown('ArrowRight'), function() {
-    this.move(1, 0);
+    if(this.get('move.isIdle')) {
+      this.get('move').perform(1, 0);
+    }
   }),
 
   left: on(keyDown('ArrowLeft'), function() {
-    this.move(-1, 0);
+    if(this.get('move.isIdle')) {
+      this.get('move').perform(-1, 0);
+    }
   }),
 
-  move(x,y) {
+  buttonMove(x, y) {
+    this.get('move').perform(x, y);
+  },
+
+  canMoveTo: function(x, y) {
+    // out of bounds
+    if (x < 0 || y < 0 || x >= board_width || y >= board_height) {
+      return false;
+    }
+
+    let targetRow = this.board.rows.objectAt(y);
+    let targetGrid = targetRow.grids.objectAt(x);
+
+    // water?
+    return targetGrid.t === 'w';
+  },
+
+  move: task(function * (x,y) {
     let ship = this.ships.objectAt(0);
-    ship.set('x', ship.x + x)
-    ship.set('y', ship.y + y)
-  }
+
+    let startx = ship.x;
+    let starty = ship.y;
+
+    ship.set('x', ship.x + x);
+    ship.set('y', ship.y + y);
+
+    if( ! this.canMoveTo(ship.x, ship.y)) {
+      yield timeout(30);
+      ship.set('x', startx);
+      ship.set('y', starty);
+    }
+  })
 
 });
