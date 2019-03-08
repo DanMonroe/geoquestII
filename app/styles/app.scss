@@ -1,0 +1,55 @@
+body {
+  margin: 0;
+  padding: 0;
+}
+.topbar {
+  position: absolute;
+  width: 100%;
+  z-index: 100;
+  display: flex;
+  justify-content: flex-start;
+  .controls {
+    //align-content: flex-end;
+    margin-left: auto;
+  }
+  div {
+    margin: 10px;
+  }
+  button {
+    margin-right: 5px;
+  }
+  .up, .down {
+    padding-left: 20px;
+  }
+}
+.boardContainer {
+  height: 100vh;
+  background-color: #aaa;
+  position: relative;
+}
+
+.ship {
+  position: absolute;
+  img {
+    height: 60px;
+  }
+}
+
+.board {
+  display: table;
+}
+.row {
+  display: table-row;
+}
+
+.grid {
+  display: table-cell;
+  width: 60px;
+  height: 60px;
+  &.w {
+    background-color: lightblue;
+  }
+  &.l {
+    background-color: tan;
+  }
+}

@@ -1,0 +1,29 @@
+<div class="topbar">
+  <div class="controls">
+    [{{ship.x}}:{{ship.y}}]
+    <div class="up"><button {{action move 0 -30}}>&nbsp;Up&nbsp;</button></div>
+    <div>
+      <button {{action move -30 0}}>Left</button>
+      <button {{action move 30 0}}>Right</button>
+    </div>
+    <div class="down"><button {{action move 0 30}}>Down</button></div>
+  </div>
+</div>
+<AnimatedContainer class="boardContainer">
+  <div class="board">
+    {{#each board.rows as |row|}}
+      <div class="row">
+      {{#each row.grids as |grid|}}
+        <div class="grid {{grid.t}}"></div>
+      {{/each}}
+      </div>
+    {{/each}}
+  </div>
+
+  {{#animated-each ships use=transition duration=400 key="id" watch="style" as |ship|}}
+    <div class="ship" style={{ship.style}} >
+      <img src="images/ship.svg" />
+    </div>
+  {{/animated-each}}
+
+</AnimatedContainer>
