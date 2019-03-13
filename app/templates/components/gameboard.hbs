@@ -17,7 +17,16 @@
 
 </AnimatedContainer>
 
-<div class="bottombar">
+<div id="gameport">
+  <div id="windowport"></div>
+  <div id="errorpane" style="display:none;">
+    <div id="errorcontent"></div>
+  </div>
+</div>
+
+
+
+<div class="bottombar" style="display:none;">
   <div class="controls">
     <div>Position: [{{ship.x}}:{{ship.y}}]</div>
     <div class="up"><button {{action buttonMove 0 -1}}>&nbsp;Up&nbsp;</button></div>

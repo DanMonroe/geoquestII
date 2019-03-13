@@ -7,6 +7,9 @@ module.exports = function(defaults) {
     // Add options here
   });
 
+  // app.import('node_modules/quixe/src/quixe/lib/quixe.min.js');
+  // app.import('node_modules/quixe/src/quixe/lib/glkote.min.js');
+
   // Use `app.import` to add additional libraries to the generated
   // output files.
   //

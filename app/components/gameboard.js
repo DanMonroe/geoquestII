@@ -8,6 +8,10 @@ import { keyDown } from 'ember-keyboard';
 import { on } from '@ember/object/evented';
 import { task, timeout } from 'ember-concurrency';
 
+// import Quixe from 'quixe';
+// import GiLoad from 'giload';
+// import GiDispa from 'gidispa';
+// import GlkOte from 'glkote';
 
 let Ship = EmberObject.extend({
   style: computed('x', 'y', function() {
@@ -50,8 +54,15 @@ export default Component.extend( EKMixin,{
 
   init() {
     this._super(...arguments);
+    // debugger;
     this.buildBoard();
     this.set('keyboardActivated', true);
+  },
+
+  didInsertElement() {
+    this._super(...arguments);
+// debugger;
+    GiLoad.load_run(null, this.story, 'base64');
   },
 
   buildBoard() {
