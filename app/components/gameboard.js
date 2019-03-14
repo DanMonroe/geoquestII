@@ -166,6 +166,13 @@ export default Component.extend( EKMixin,{
       ship.set('x', startx);
       ship.set('y', starty);
     }
-  })
+  }),
+
+  actions: {
+    submitCommandToIF(value) {
+      console.log(value, this.experimentalInput);
+      GlkOte.extevent(this.experimentalInput);
+    }
+  }
 
 });
