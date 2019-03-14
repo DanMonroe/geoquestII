@@ -63,6 +63,7 @@ export default Component.extend( EKMixin,{
     this._super(...arguments);
 // debugger;
     GiLoad.load_run(null, this.story, 'base64');
+    GlkOte.setgeoquestwindow('.InvisibleCursor');
   },
 
   buildBoard() {
@@ -169,9 +170,10 @@ export default Component.extend( EKMixin,{
   }),
 
   actions: {
-    submitCommandToIF(value) {
-      console.log(value, this.experimentalInput);
-      GlkOte.extevent(this.experimentalInput);
+    submitCommandToIF() {
+      // debugger;
+      // GlkOte.extevent(this.experimentalInput);
+      GlkOte.geoquestevent(this.experimentalInput);
     }
   }
 

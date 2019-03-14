@@ -2,7 +2,7 @@
  * GlkOte Library: version 2.2.4.
  * Designed by Andrew Plotkin <erkyrath@eblong.com>
  * <http://eblong.com/zarf/glk/glkote.html>
- * 
+ *
  * This Javascript library is copyright 2008-16 by Andrew Plotkin.
  * It is distributed under the MIT license; see the "LICENSE" file.
  *
@@ -35,7 +35,7 @@
  *
  * (A few calls, or arguments of calls, are marked "for autosave/autorestore
  * only". These exist for the purpose of getting a game displayed in a known
- * state, which is rather more complicated than the usual situation of 
+ * state, which is rather more complicated than the usual situation of
  * letting a game start up and run.)
  *
  * For full documentation, see the docs.html file in this package.
@@ -72,6 +72,8 @@ var detect_external_links = false;
 var regex_external_links = null;
 var debug_out_handler = null;
 
+var geoquest_scrollwindow = null;
+
 /* Some handy constants */
 /* A non-breaking space character. */
 var NBSP = "\xa0";
@@ -83,7 +85,7 @@ var approx_scroll_width = 20;
    moreprompt. (Really this just counters rounding error.) */
 var moreprompt_margin = 2;
 
-/* Some constants for key event native values. (Not including function 
+/* Some constants for key event native values. (Not including function
    keys.) */
 var key_codes = {
   KEY_BACKSPACE: 8,
@@ -106,8 +108,8 @@ var key_codes = {
    native values. */
 var terminator_key_names = {
     escape : key_codes.KEY_ESC,
-    func1 : 112, func2 : 113, func3 : 114, func4 : 115, func5 : 116, 
-    func6 : 117, func7 : 118, func8 : 119, func9 : 120, func10 : 121, 
+    func1 : 112, func2 : 113, func3 : 114, func4 : 115, func5 : 116,
+    func6 : 117, func7 : 118, func8 : 119, func9 : 120, func10 : 121,
     func11 : 122, func12 : 123
 };
 /* The inverse of the above. Maps native values to Glk key names. Set up at
@@ -417,14 +419,14 @@ function measure_window() {
   /* Here we will include padding and border. */
   winsize = get_size(graphwin);
   canvassize = get_size(graphcanvas);
-  
+
   /* Again, these values include both sides (left+right, top+bottom). */
   metrics.graphicsmarginx = winsize.width - canvassize.width;
   metrics.graphicsmarginy = winsize.height - canvassize.height;
 
   /* Now that we're done measuring, discard the pane. */
   layout_test_pane.remove();
-  
+
   /* These values come from the game interface object. */
   metrics.outspacingx = 0;
   metrics.outspacingy = 0;
@@ -648,9 +650,9 @@ function glkote_update(arg) {
     if (win.type == 'buffer' && win.needscroll) {
       /* needscroll is true if the window has accumulated any content or
          an input field in this update cycle. needspaging is true if
-         the window has any unviewed content from *last* cycle; we set 
+         the window has any unviewed content from *last* cycle; we set
          it now if any new content remains unviewed after the first
-         obligatory scrolldown. 
+         obligatory scrolldown.
          (If perform_paging is false, we forget about needspaging and
          just always scroll to the bottom.) */
       win.needscroll = false;
@@ -738,7 +740,7 @@ function glkote_update(arg) {
 
   /* Figure out which window to set the focus to. (But not if the UI is
      disabled. We also skip this if there's paging to be done, because
-     focussing might autoscroll and we want to trap keystrokes for 
+     focussing might autoscroll and we want to trap keystrokes for
      paging anyhow.) */
 
   var newinputwin = 0;
@@ -783,7 +785,7 @@ function glkote_update(arg) {
           }
         });
     }
-    
+
 
     /* For the case of autorestore (only), we short-circuit the paging
        mechanism and assume the player has already seen all the text. */
@@ -792,9 +794,9 @@ function glkote_update(arg) {
           window_scroll_to_bottom(win);
         }
       });
-    
-    if (!(autorestore.metrics 
-        && autorestore.metrics.width == current_metrics.width 
+
+    if (!(autorestore.metrics
+        && autorestore.metrics.width == current_metrics.width
         && autorestore.metrics.height == current_metrics.height)) {
       /* The window metrics don't match what's recorded in the
          autosave. Trigger a synthetic resize event. */
@@ -934,7 +936,7 @@ function accept_one_window(arg) {
           || ctx.mozBackingStorePixelRatio
           || ctx.msBackingStorePixelRatio
           || ctx.oBackingStorePixelRatio
-          || ctx.backingStorePixelRatio 
+          || ctx.backingStorePixelRatio
           || 1;
       }
       win.scaleratio = current_devpixelratio / win.backpixelratio;
@@ -1188,7 +1190,7 @@ function accept_one_content(arg) {
                 if (newurl)
                   imgurl = newurl;
               }
-              var el = $('<img>', 
+              var el = $('<img>',
                 { src:imgurl,
                   width:''+rdesc.width, height:''+rdesc.height } );
               if (rdesc.alttext)
@@ -1282,7 +1284,7 @@ function accept_one_content(arg) {
     var divel = buffer_last_line(win);
     if (divel) {
       cursel = $('<span>',
-        { id: 'win'+win.id+'_cursor', 'class': 'InvisibleCursor' } );
+        { id: 'win'+win.id+'_cursor', 'class': 'InvisibleCursor', 'data-goq-id' : win.id } );
       cursel.append(NBSP);
       divel.append(cursel);
 
@@ -1310,7 +1312,7 @@ function accept_one_content(arg) {
     /* Perform the requested draw operations. */
     var draw = arg.draw;
     var ix;
-    
+
     /* Accept a missing draw field as doing nothing. */
     if (draw === undefined)
       draw = [];
@@ -1319,7 +1321,7 @@ function accept_one_content(arg) {
        data is not cached). So we can't do this with a simple synchronous loop.
        Instead, we must add drawing ops to a queue, and then have a function
        callback that executes them. (It's a global queue, not per-window.)
-       
+
        We assume that if the queue is nonempty, a callback is already waiting
        out there, so we don't have to set it up.
     */
@@ -1347,7 +1349,7 @@ function accept_one_content(arg) {
 */
 function accept_inputcancel(arg) {
   var hasinput = {};
-  jQuery.map(arg, function(argi) { 
+  jQuery.map(arg, function(argi) {
     if (argi.type)
       hasinput[argi.id] = argi;
   });
@@ -1424,7 +1426,7 @@ function accept_inputset(arg) {
           inputel.val(argi.initial);
         win.terminators = {};
         if (argi.terminators) {
-          for (var ix=0; ix<argi.terminators.length; ix++) 
+          for (var ix=0; ix<argi.terminators.length; ix++)
             win.terminators[argi.terminators[ix]] = true;
         }
       }
@@ -1463,7 +1465,7 @@ function accept_inputset(arg) {
       var cursel = $('#win'+win.id+'_cursor', dom_context);
       if (!cursel.length) {
         cursel = $('<span>',
-          { id: 'win'+win.id+'_cursor', 'class': 'InvisibleCursor' } );
+          { id: 'win'+win.id+'_cursor', 'class': 'InvisibleCursor', 'data-goq-id' : win.id } );
         cursel.append(NBSP);
         win.frameel.append(cursel);
       }
@@ -1545,7 +1547,7 @@ function buffer_last_line(win) {
   return $(divel);
 }
 
-/* Return the vertical offset (relative to the parent) of the top of the 
+/* Return the vertical offset (relative to the parent) of the top of the
    last child of the parent. We use the raw DOM "offsetTop" property;
    jQuery doesn't have an accessor for it.
    (Possibly broken in MSIE7? It worked in the old version, though.)
@@ -1578,7 +1580,7 @@ function readjust_paging_focus(canfocus) {
         }
       });
   }
-    
+
   if (windows_paging_count) {
     /* pageable_win will be set. This is our new paging focus. */
     last_known_paging = pageable_win;
@@ -1598,7 +1600,7 @@ function readjust_paging_focus(canfocus) {
           }
         });
     }
-    
+
     if (newinputwin) {
       var win = windowdic[newinputwin];
       if (win.inputel) {
@@ -1622,8 +1624,8 @@ function glkote_get_interface() {
 
    In normal usage this is always undefined (meaning, DOM elements are
    searched for within the entire document). This is a fast case;
-   jQuery optimizes for it. However, some apps (not Quixe!) want to 
-   detach the Glk DOM and maintain it off-screen. That's possible if you 
+   jQuery optimizes for it. However, some apps (not Quixe!) want to
+   detach the Glk DOM and maintain it off-screen. That's possible if you
    set the DOM context to the detached element. I think (although I have
    not tested) that this configuration is less well-optimized.
 
@@ -1660,7 +1662,7 @@ function glkote_save_allstate() {
         obj.defcolor[winid] = win.defcolor;
       }
     });
-  
+
   return obj;
 }
 
@@ -1729,6 +1731,39 @@ function glkote_warning(msg) {
 */
 function glkote_extevent(val) {
   send_response('external', null, val);
+}
+
+function geoquest_set_window(windowCssClass) {
+  geoquest_scrollwindow = $(windowCssClass);
+}
+/* GeoQuest: Cause an immediate input event, of type "qeoquest". This invokes
+   Game.accept(), just like any other event.
+*/
+function geoquest_event(val) {
+// debugger;
+  var winid = geoquest_scrollwindow.data('goqId');
+  // var winid = geoquest_scrollwindow.data('winid');
+  var win = windowdic[winid];
+  if (!win || !win.input)
+    return true;
+
+  // this is the same as type 'line' for now
+  // probably will need to enhance this later
+  var historylast = null;
+  if (win.history.length)
+    historylast = win.history[win.history.length-1];
+
+  /* Store this input in the command history for this window, unless
+     the input is blank or a duplicate. */
+  if (val && val != historylast) {
+    win.history.push(val);
+    if (win.history.length > 20) {
+      /* Don't keep more than twenty entries. */
+      win.history.shift();
+    }
+  }
+
+  send_response('line', win, val);
 }
 
 /* If we got a 'retry' result from the game, we wait a bit and then call
@@ -1803,9 +1838,9 @@ function last_child_of(obj) {
 }
 
 /* Add text to a DOM element. If GlkOte is configured to detect URLs,
-   this does that, converting them into 
+   this does that, converting them into
    <a href='...' class='External' target='_blank'> tags.
-   
+
    This requires calls to document.createTextNode, because jQuery doesn't
    have a notion of appending literal text. I swear...
 */
@@ -1857,7 +1892,7 @@ function insert_text_detecting(el, val) {
   el.append(document.createTextNode(val));
 }
 
-/* Get the CanvasRenderingContext2D from a canvas element. 
+/* Get the CanvasRenderingContext2D from a canvas element.
 */
 function canvas_get_2dcontext(canvasel) {
   if (!canvasel || !canvasel.length)
@@ -1908,7 +1943,7 @@ function perform_graphics_ops(loadedimg, loadedev) {
     }
 
     var optype = op.special;
-    
+
     switch (optype) {
       case 'setcolor':
         /* Set the default color (no visible changes). */
@@ -2081,6 +2116,12 @@ function send_response(type, win, val, val2) {
     if (val2)
       res.terminator = val2;
   }
+  if (type == 'qeoquest') {
+    res.window = win.id;
+    res.value = val;
+    if (val2)
+      res.terminator = val2;
+  }
   else if (type == 'char') {
     res.window = win.id;
     res.value = val;
@@ -2120,7 +2161,7 @@ function send_response(type, win, val, val2) {
   if (!(type == 'init' || type == 'refresh'
       || type == 'specialresponse' || type == 'debuginput')) {
     jQuery.each(windowdic, function(tmpid, win) {
-      var savepartial = (type != 'line' && type != 'char') 
+      var savepartial = (type != 'line' && type != 'char')
                         || (win.id != winid);
       if (savepartial && win.input && win.input.type == 'line'
         && win.inputel && win.inputel.val()) {
@@ -2159,11 +2200,11 @@ function get_query_params() {
         for (var ix = 0; ix < args.length; ix++) {
             var pair = args[ix].split('=');
             var name = decodeURIComponent(pair[0]);
-            
+
             var value = (pair.length==2)
                 ? decodeURIComponent(pair[1])
                 : name;
-            
+
             map[name] = value;
         }
     }
@@ -2241,7 +2282,7 @@ function recording_send(arg) {
             }
           }
         }
-      }      
+      }
     }
 
     recording_state.output = buffer;
@@ -2391,7 +2432,7 @@ function evhan_doc_pixelreschange(ev) {
              a bunch of them from the same handler. We'll set up a deferred
              function call. */
           defer_func(function() { send_window_redraw(winid); });
-        }  
+        }
       });
   }
 }
@@ -2460,7 +2501,7 @@ function evhan_doc_keypress(ev) {
       if (win.topunseen < newtopunseen)
         win.topunseen = newtopunseen;
       if (win.needspaging) {
-        /* The scroll-down might have cleared needspaging already. But 
+        /* The scroll-down might have cleared needspaging already. But
            if not... */
         if (frameel.scrollTop() + frameheight + moreprompt_margin >= frameel.get(0).scrollHeight) {
           win.needspaging = false;
@@ -2821,7 +2862,7 @@ function evhan_input_blur(ev) {
   currently_focussed = false;
 }
 
-/* Event handler: scrolling in buffer window 
+/* Event handler: scrolling in buffer window
 */
 function evhan_window_scroll(ev) {
   var winid = ev.data;
@@ -2867,7 +2908,7 @@ function window_scroll_to_bottom(win) {
   if (win.topunseen < newtopunseen)
     win.topunseen = newtopunseen;
   if (win.needspaging) {
-    /* The scroll-down might have cleared needspaging already. But 
+    /* The scroll-down might have cleared needspaging already. But
        if not... */
     if (frameel.scrollTop() + frameheight + moreprompt_margin >= frameel.get(0).scrollHeight) {
       win.needspaging = false;
@@ -2898,7 +2939,7 @@ function build_evhan_hyperlink(winid, linkval) {
   };
 }
 
-/* Event handler for the request_timer timeout that we set in 
+/* Event handler for the request_timer timeout that we set in
    accept_timerrequest().
 */
 function evhan_timer_event() {
@@ -2910,7 +2951,7 @@ function evhan_timer_event() {
 
   /* It's a repeating timer, so set it again. */
   request_timer = window.setTimeout(evhan_timer_event, request_timer_interval);
-  
+
   if (disabled) {
     /* Can't handle the timer while the UI is disabled, so we punt.
        It will fire again someday. */
@@ -2920,7 +2961,7 @@ function evhan_timer_event() {
   send_response('timer');
 }
 
-/* Event handler for the GiDebug command callback. 
+/* Event handler for the GiDebug command callback.
 */
 function evhan_debug_command(cmd) {
   send_response('debuginput', null, cmd);
@@ -2932,7 +2973,7 @@ function evhan_debug_command(cmd) {
    become the GlkOte global. */
 return {
   version:  '2.2.4',
-  init:     glkote_init, 
+  init:     glkote_init,
   update:   glkote_update,
   extevent: glkote_extevent,
   getinterface: glkote_get_interface,
@@ -2941,7 +2982,10 @@ return {
   save_allstate : glkote_save_allstate,
   log:      glkote_log,
   warning:  glkote_warning,
-  error:    glkote_error
+  error:    glkote_error,
+
+  geoquestevent: geoquest_event,
+  setgeoquestwindow: geoquest_set_window
 };
 
 }();
