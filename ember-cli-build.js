@@ -10,6 +10,12 @@ module.exports = function(defaults) {
   // app.import('node_modules/quixe/src/quixe/lib/quixe.min.js');
   // app.import('node_modules/quixe/src/quixe/lib/glkote.min.js');
 
+  app.import('vendor/gi_dispa.js');
+  app.import('vendor/gi_load.js');
+  app.import('vendor/glkapi.js');
+  app.import('vendor/glkote.js');
+  app.import('vendor/quixe.js');
+
   // Use `app.import` to add additional libraries to the generated
   // output files.
   //

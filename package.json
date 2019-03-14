@@ -55,6 +55,5 @@
     "node": "6.* || 8.* || >= 10.*"
   },
   "dependencies": {
-    "ember-quixe": "https://github.com/DanMonroe/ember-quixe.git"
   }
 }
