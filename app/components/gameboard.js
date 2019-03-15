@@ -10,16 +10,12 @@ import { task, timeout } from 'ember-concurrency';
 import {inject as service} from '@ember/service';
 import { alias } from '@ember/object/computed';
 
-// import Quixe from 'quixe';
-// import GiLoad from 'giload';
-// import GiDispa from 'gidispa';
-// import GlkOte from 'glkote';
 
-let Ship = EmberObject.extend({
-  style: computed('x', 'y', function() {
-    return htmlSafe(`top: ${parseFloat(this.get('y'))*60}px; left: ${parseFloat(this.get('x'))*60}px; `);
-  })
-});
+// let Ship = EmberObject.extend({
+//   style: computed('x', 'y', function() {
+//     return htmlSafe(`top: ${parseFloat(this.get('y'))*60}px; left: ${parseFloat(this.get('x'))*60}px; `);
+//   })
+// });
 
 /**
  *
