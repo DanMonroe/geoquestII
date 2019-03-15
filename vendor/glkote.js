@@ -72,7 +72,9 @@ var detect_external_links = false;
 var regex_external_links = null;
 var debug_out_handler = null;
 
+var geoquest_api = null;
 var geoquest_scrollwindow = null;
+var geoquest_event_callback = null;
 
 /* Some handy constants */
 /* A non-breaking space character. */
@@ -1733,14 +1735,19 @@ function glkote_extevent(val) {
   send_response('external', null, val);
 }
 
-function geoquest_set_window(windowCssClass) {
-  geoquest_scrollwindow = $(windowCssClass);
+function geoquest_set_options(geoq_options) {
+  console.log('geoquest_set_options', geoq_options);
+
+  geoquest_scrollwindow = $(geoq_options.geoq_window);
+  geoquest_api = geoq_options.api || {};
 }
-/* GeoQuest: Cause an immediate input event, of type "qeoquest". This invokes
+/* GeoQuest: Cause an immediate input event, of type "geoquest". This invokes
    Game.accept(), just like any other event.
 */
-function geoquest_event(val) {
+function geoquest_event(val, gameObject, geoquestEventCallback) {
 // debugger;
+  geoquest_event_callback = geoquestEventCallback;
+
   var winid = geoquest_scrollwindow.data('goqId');
   // var winid = geoquest_scrollwindow.data('winid');
   var win = windowdic[winid];
@@ -1763,7 +1770,19 @@ function geoquest_event(val) {
     }
   }
 
-  send_response('line', win, val);
+  send_response('geoquest', win, val);
+  // send_response('line', win, val);
+
+//   if (geoquest_api.gameboard) {
+// console.log(geoquest_api);
+// debugger;
+//     // geoquest_api.gameboard.geoqmove(0,0);
+//     // geoquest_api.gameboard.get('geoqmove')(0,0);
+//     geoquest_api.gameboard.moveTask.perform(0,0);
+//   }
+  if(geoquestEventCallback) {
+    geoquestEventCallback('foo');
+  }
 }
 
 /* If we got a 'retry' result from the game, we wait a bit and then call
@@ -2116,7 +2135,7 @@ function send_response(type, win, val, val2) {
     if (val2)
       res.terminator = val2;
   }
-  if (type == 'qeoquest') {
+  else if (type == 'geoquest') {
     res.window = win.id;
     res.value = val;
     if (val2)
@@ -2180,6 +2199,7 @@ function send_response(type, win, val, val2) {
     recording_state.timestamp = (new Date().getTime());
   }
 
+  // console.log(res);
   game_interface.accept(res);
 }
 
@@ -2985,7 +3005,7 @@ return {
   error:    glkote_error,
 
   geoquestevent: geoquest_event,
-  setgeoquestwindow: geoquest_set_window
+  setgeoquestoptions: geoquest_set_options
 };
 
 }();

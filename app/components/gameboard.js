@@ -7,6 +7,8 @@ import { EKMixin } from 'ember-keyboard';
 import { keyDown } from 'ember-keyboard';
 import { on } from '@ember/object/evented';
 import { task, timeout } from 'ember-concurrency';
+import {inject as service} from '@ember/service';
+import { alias } from '@ember/object/computed';
 
 // import Quixe from 'quixe';
 // import GiLoad from 'giload';
@@ -19,43 +21,56 @@ let Ship = EmberObject.extend({
   })
 });
 
-const rawboard = [
-  [
-    {t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'}
-  ],
-  [
-    {t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'}
-  ],
-  [
-    {t:'w'},{t:'l'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'l'}
-  ],
-  [
-    {t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'l'},{t:'l'}
-  ],
-  [
-    {t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'l'}
-  ],
-  [
-    {t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'l'},{t:'l'}
-  ],
-  [
-    {t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'l'},{t:'l'},{t:'l'}
-  ]
-];
-const board_width = 7;
-const board_height = 7;
+/**
+ *
+ * t: terrain
+ *    w: water
+ *    l: land
+ *
+ * cmd: command number
+ */
+// const rawboard = [
+//   [
+//     {t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'}
+//   ],
+//   [
+//     {t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'}
+//   ],
+//   [
+//     {t:'w'},{t:'l'},{t:'w'},{t:'w'},{t:'w'},{t:'w', cmd:1},{t:'l'}
+//   ],
+//   [
+//     {t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'l'},{t:'l'}
+//   ],
+//   [
+//     {t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'l'}
+//   ],
+//   [
+//     {t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'l'},{t:'l'}
+//   ],
+//   [
+//     {t:'w'},{t:'w'},{t:'w'},{t:'w'},{t:'l'},{t:'l'},{t:'l'}
+//   ]
+// ];
+// const board_width = 7;
+// const board_height = 7;
 
 export default Component.extend( EKMixin,{
 
   classNames: ['boardContainer'],
 
   showShip: false,
-  board: null,
+  game: service(),
+  gameboard: service(),
+  board: alias('gameboard.board'),
 
   init() {
     this._super(...arguments);
     // debugger;
-    this.buildBoard();
+    this.game.init();
+    this.gameboard.buildBoard();
+
+    // this.buildBoard();
     this.set('keyboardActivated', true);
   },
 
@@ -63,81 +78,87 @@ export default Component.extend( EKMixin,{
     this._super(...arguments);
 // debugger;
     GiLoad.load_run(null, this.story, 'base64');
-    GlkOte.setgeoquestwindow('.InvisibleCursor');
-  },
-
-  buildBoard() {
-    let rows = emberArray();
-    for(let row = 0; row < board_height; row++){
-
-      let grids = emberArray();
-
-      for(let col = 0; col < board_width; col++){
-        // console.log('row', row, 'col', col, rawboard[row][col]);
-        grids.pushObject(EmberObject.create(rawboard[row][col]));
+    GlkOte.setgeoquestoptions({
+      'geoq_window':'.InvisibleCursor',
+      'api':{
+        gameboard: this
       }
-      let newRow = EmberObject.create({
-        grids: grids
-      });
-
-      rows.pushObject(newRow);
-    }
-    let board = EmberObject.create({
-      rows: rows
     });
-
-    // console.log('board', board);
-
-    this.set('board', board)
   },
+        // move:this.get('moveTask')
+
+  // buildBoard() {
+  //   let rows = emberArray();
+  //   for(let row = 0; row < board_height; row++){
+  //
+  //     let grids = emberArray();
+  //
+  //     for(let col = 0; col < board_width; col++){
+  //       // console.log('row', row, 'col', col, rawboard[row][col]);
+  //       grids.pushObject(EmberObject.create(rawboard[row][col]));
+  //     }
+  //     let newRow = EmberObject.create({
+  //       grids: grids
+  //     });
+  //
+  //     rows.pushObject(newRow);
+  //   }
+  //   let board = EmberObject.create({
+  //     rows: rows
+  //   });
+  //
+  //   // console.log('board', board);
+  //
+  //   this.set('board', board)
+  // },
 
   transition: function * ({ keptSprites }) {
     keptSprites.forEach(move);
   },
 
-  ships: computed(function() {
-    let ships = emberArray();
-    ships.push(Ship.create({
-      id: 1,
-      x: 3,
-      y: 2
-    }));
+  // ships: computed(function() {
+  //   let ships = emberArray();
+  //   ships.push(Ship.create({
+  //     id: 1,
+  //     x: 3,
+  //     y: 2
+  //   }));
+  //
+  //   return ships;
+  // }),
 
-    return ships;
-  }),
-
-  ship: computed('ships.[]', function() {
-    if(this.ships.length) {
-      return this.ships.objectAt(0);
+  ship: computed('game.ships.[]', function() {
+    if(this.game.ships.length) {
+      return this.game.ships.objectAt(0);
     }
   }),
 
   up: on(keyDown('ArrowUp'), function() {
-    if(this.get('move.isIdle')) {
-      this.get('move').perform(0, -1);
+    if(this.get('moveTask.isIdle')) {
+      this.get('moveTask').perform(0, -1);
     }
   }),
 
   down: on(keyDown('ArrowDown'), function() {
-    if(this.get('move.isIdle')) {
-      this.get('move').perform(0, 1);
+    if(this.get('moveTask.isIdle')) {
+      this.get('moveTask').perform(0, 1);
     }
   }),
 
   right: on(keyDown('ArrowRight'), function() {
-    if(this.get('move.isIdle')) {
-      this.get('move').perform(1, 0);
+    if(this.get('moveTask.isIdle')) {
+      this.get('moveTask').perform(1, 0);
     }
   }),
 
   left: on(keyDown('ArrowLeft'), function() {
-    if(this.get('move.isIdle')) {
-      this.get('move').perform(-1, 0);
+    if(this.get('moveTask.isIdle')) {
+      this.get('moveTask').perform(-1, 0);
     }
   }),
 
   buttonMove(x, y) {
-    this.get('move').perform(x, y);
+    this.get('moveTask').perform(x, y);
   },
 
   canMoveTo: function(x, y) {
@@ -153,8 +174,8 @@ export default Component.extend( EKMixin,{
     return targetGrid.t === 'w';
   },
 
-  move: task(function * (x,y) {
-    let ship = this.ships.objectAt(0);
+  moveTask: task(function * (x,y) {
+    let ship = this.game.ships.objectAt(0);
 
     let startx = ship.x;
     let starty = ship.y;
@@ -167,13 +188,56 @@ export default Component.extend( EKMixin,{
       ship.set('x', startx);
       ship.set('y', starty);
     }
+
+    this.enterSpace();
   }),
+
+  // IF interaction:
+  enterSpace() {
+    let space = rawboard[this.ship.y][this.ship.x];
+
+    if (space) {
+      this.processCommand(space.cmd);
+    }
+  },
+
+  geoqMove(x,y) {
+    debugger;
+    this.get('moveTask').perform(x, y);
+  },
+
+  geoquestevent(command, glkoteEventCallback) {
+    GlkOte.geoquestevent(
+      command,
+      {
+      },
+      glkoteEventCallback);
+
+    // 'ship': this.ship,
+    // 'move': this.move
+  },
+
+
+  processCommand(command) {
+    switch (command) {
+      case 1: // try sending north command
+        this.geoquestevent('N', this.glkoteEventCallback);
+        break;
+      default:
+        break;
+    }
+  },
+
+  glkoteEventCallback() {
+    console.log('glkoteEventCallback', arguments);
+  },
 
   actions: {
     submitCommandToIF() {
       // debugger;
       // GlkOte.extevent(this.experimentalInput);
-      GlkOte.geoquestevent(this.experimentalInput);
+      this.geoquestevent(this.experimentalInput, this.glkoteEventCallback);
+
     }
   }
 

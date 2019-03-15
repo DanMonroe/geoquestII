@@ -9,7 +9,7 @@
     {{/each}}
   </div>
 
-  {{#animated-each ships use=transition duration=400 key="id" watch="style" as |ship|}}
+  {{#animated-each game.ships use=transition duration=400 key="id" watch="style" as |ship|}}
     <div class="ship" style={{ship.style}} >
       <img src="images/ship.svg" />
     </div>
