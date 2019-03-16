@@ -24,6 +24,11 @@ let Ship = EmberObject.extend({
 
 export default Component.extend(EKMixin, {
   ships: emberArray(),
+  currentmap: null,
+  startx: 0,
+  starty: 0,
+  boardWidth: 0,
+  boardHeight: 0,
 
   init() {
     this._super(...arguments);
@@ -32,10 +37,17 @@ export default Component.extend(EKMixin, {
 
     ships.push(Ship.create({
       id: 1,
-      x: 3,
-      y: 3
+      x: this.startx,
+      y: this.starty
     }));
     this.set('ships', ships);
+
+    let boardHeight = this.currentmap.length;
+    this.set('boardHeight', boardHeight);
+    this.set('boardWidth', this.currentmap[0].length);
+
+    console.log('boardHeight', this.boardHeight);
+    console.log('boardWidth', this.boardWidth);
 
     this.set('keyboardActivated', true);
   },
@@ -87,30 +99,34 @@ export default Component.extend(EKMixin, {
   }),
 
   canMoveTo: function(x, y) {
-    return true;
+    // console.log('canMoveTo', x, y);
 
     // out of bounds
-    if (x < 0 || y < 0 || x >= board_width || y >= board_height) {
+    if (x <= 0 || y <= 0 || x > this.boardWidth || y > this.boardHeight) {
       return false;
     }
 
-    let targetRow = this.board.rows.objectAt(y);
-    let targetGrid = targetRow.grids.objectAt(x);
+    let targetRow = this.currentmap[y-1];
+    let targetGrid = targetRow[x-1];
+
+    if (targetGrid === null) {
+      return false;
+    }
 
     // water?
-    return targetGrid.t === 'w';
+    return targetGrid.m === 'w';
   },
 
   moveTask: task(function * (x,y) {
     let ship = this.ships.objectAt(0);
 
-    let startx = ship.x;
-    let starty = ship.y;
+    let startx = +ship.x;
+    let starty = +ship.y;
 
-    ship.set('x', ship.x + x);
-    ship.set('y', ship.y + y);
+    ship.set('x', +ship.x + x);
+    ship.set('y', +ship.y + y);
 
-    if( ! this.canMoveTo(ship.x, ship.y)) {
+    if( ! this.canMoveTo(+ship.x, +ship.y)) {
       yield timeout(30);
       ship.set('x', startx);
       ship.set('y', starty);

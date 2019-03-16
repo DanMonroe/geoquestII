@@ -2,10 +2,15 @@
 <AnimatedContainer class="gameboard">
   <div class="hexwrapper">
     <canvas id="hexcanvas" width="400" height="450" onClick={{action "hexReport"}}></canvas>
-    <Ship />
+    <Ship @currentmap={{this.map}} @startx=3 @starty=3 />
   </div>
-
-
 </AnimatedContainer>
-
-
+<div class="compass">
+  <img class="w" src="/images/hex.jpg" />
+  <img class="q" src="/images/hex.jpg" />
+  <img class="e" src="/images/hex.jpg" />
+  <img class="a" src="/images/hex.jpg" />
+  <img class="center" src="/images/hex.jpg" />
+  <img class="d" src="/images/hex.jpg" />
+  <img class="s" src="/images/hex.jpg" />
+</div>

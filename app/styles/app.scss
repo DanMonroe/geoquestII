@@ -80,6 +80,29 @@ body {
   height: 37vh;
 }
 
+.compass {
+  display: none;
+  position: absolute;
+  top:0;
+  right:0;
+  img {
+    width: 15%;
+    position: absolute;
+    &.w {
+      top: 0;
+      right: 50px;
+    }
+    &.q {
+      top: 25px;
+      right: 50px;
+    }
+    &.e {
+      top: 25px;
+      right: 50px;
+    }
+  }
+}
+
 /* GlkOte stylesheet for Quixe/I7 Template
  * Designed by Andrew Plotkin <erkyrath@eblong.com>
  * <http://eblong.com/zarf/glk/glkote.html>
