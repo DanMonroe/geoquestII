@@ -4,6 +4,8 @@ import Hex from './hex';
 
 export default EmberObject.extend({
   name: 'Hex',
+
+  id: null,
   q: null,
   r: null,
   s: null,

@@ -46,33 +46,6 @@ export default EmberObject.extend({
     // this.origin = origin;
   },
 
-  // pointy: computed(function() {
-  //   return Orientation.create({
-  //     f0:Math.sqrt(3.0),
-  //     f1:Math.sqrt(3.0) / 2.0,
-  //     f2:0.0,
-  //     f3:3.0 / 2.0,
-  //     b0:Math.sqrt(3.0) / 3.0,
-  //     b1:-1.0 / 3.0,
-  //     b2:0.0,
-  //     b3:2.0 / 3.0,
-  //     start_angle:0.5
-  //   });
-  // }),
-  // flat: computed(function() {
-  //   return Orientation.create({
-  //     f0:3.0 / 2.0,
-  //     f1:0.0,
-  //     f2:Math.sqrt(3.0) / 2.0,
-  //     f3:Math.sqrt(3.0),
-  //     b0:2.0 / 3.0,
-  //     b1:0.0,
-  //     b2:-1.0 / 3.0,
-  //     b3:Math.sqrt(3.0) / 3.0,
-  //     start_angle:0.0
-  //   });
-  // }),
-
   hexToPixel(h) {
     var M = this.orientation;
     var size = this.size;
@@ -85,7 +58,7 @@ export default EmberObject.extend({
     var M = this.orientation;
     var size = this.size;
     var origin = this.origin;
-    var pt = new Point((p.x - origin.x) / size.x, (p.y - origin.y) / size.y);
+    var pt = Point.create({x:(p.x - origin.x) / size.x, y:(p.y - origin.y) / size.y});
     var q = M.b0 * pt.x + M.b1 * pt.y;
     var r = M.b2 * pt.x + M.b3 * pt.y;
     return Hex.create({q:q, r:r, s:-q - r});
