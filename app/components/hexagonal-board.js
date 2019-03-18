@@ -5,6 +5,9 @@ import {inject as service} from '@ember/service';
 
 /**
  * Axial coordinates
+ *
+ * MUST be an odd number sized array for a hexagonal shape
+ *
  * t: tile number
  * m: "move"
  *    "w" : water passage ability

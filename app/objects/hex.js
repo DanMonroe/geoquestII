@@ -6,6 +6,8 @@ export default EmberObject.extend({
   name: 'Hex',
 
   id: null,
+  map: null,
+
   q: null,
   r: null,
   s: null,
