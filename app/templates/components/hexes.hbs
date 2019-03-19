@@ -1,26 +1,43 @@
 <!--https://www.redblobgames.com/grids/hexagons/implementation.html-->
-<div class="hexeswrapper">
+<AnimatedContainer class="gameboard">
   <section>
-    <div style="display:none;">
+    <div class="hexwrapper">
       <figure>
-        <canvas id="layout-test-orientation-pointy" width="600" height="400"></canvas>
-        <canvas id="layout-test-orientation-flat" width="600" height="400"></canvas>
-      </figure>
-
-      <p>Let’s try three different sizes, <code>Point(10, 10)</code>, <code>Point(20, 20)</code>, and <code>Point(40, 40)</code>:</p>
-
-      <figure>
-        <canvas id="layout-test-size-1" width="400" height="400"></canvas>
-        <canvas id="layout-test-size-2" width="400" height="400"></canvas>
-        <canvas id="layout-test-size-3" width="400" height="400"></canvas>
-      </figure>
-
-    </div>
         <canvas id="gamecanvas-flat" width="500" height="500"
-          onClick={{action "hexReport" "gamecanvas-flat"}}
-          onMouseMove={{action "hexMouseMove"}}
+                onClick={{action "hexReport" "gamecanvas-flat"}}
+                onMouseMove={{action "hexMouseMove"}}
         ></canvas>
+      </figure>
+      {{#if this.ships}}
+        <Ship @ships={{this.ships}}
+              @hexLayout={{this.currentLayout}}
+              @q={{this.shipHex.q}}
+              @r={{this.shipHex.r}}
+              @s={{this.shipHex.s}}
+              @hex={{this.shipHex}}
+              @point={{this.shipPoint}}
+              @mapCenterX={{this.centerX}}
+              @mapCenterY={{this.centerY}}
+        />
+      {{/if}}
+    </div>
   </section>
+</AnimatedContainer>
+<div>
+  Mouse X:Y{{input value=mouseXY}}
 </div>
-{{input value=mouseXY}}{{input value=currentHex}}<button {{action "toggleTiles"}}>Toggle Tiles</button>
-[{{#if mapLoaded}}loaded{{/if}}]
+<div>
+  Mouse Hex: {{input value=currentHex}}
+</div>
+<div>
+  Ship: {{this.shipHex.q}} {{this.shipHex.r}} {{this.shipHex.s}}
+</div>
+<div>
+  Rect centers: {{centerX}} : {{centerY}}
+</div>
+<div>
+  <button {{action "toggleTiles"}}>Toggle Tiles</button>
+</div>
+<div>
+  [{{#if this.tilesLoaded}}loaded{{/if}}]
+</div>

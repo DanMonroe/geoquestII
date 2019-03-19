@@ -1,11 +1,18 @@
 import Component from '@ember/component';
 import EmberObject, { computed, set } from '@ember/object';
 import {assert} from '@ember/debug';
+import { htmlSafe } from '@ember/string';
+import { A as emberArray } from '@ember/array';
+import { EKMixin, keyDown } from 'ember-keyboard';
+import { on } from '@ember/object/evented';
+import { task, timeout } from 'ember-concurrency';
+import move from 'ember-animated/motions/move';
 
-import Hex from '../objects/hex';
+import Hex, { DIRECTIONS } from '../objects/hex';
 import Layout, { LAYOUTS } from '../objects/layout';
 import Point from '../objects/point';
 import Orientation from '../objects/orientation';
+import Ship from '../objects/ship'
 
 export const TILEIMAGES = Object.freeze([
   "/images/hex/ZeshioHexKitDemo_096.png", // water
@@ -19,47 +26,33 @@ export const TILEIMAGES = Object.freeze([
 
 export const MAP = Object.freeze(
   [
-    [null,       null,       {t:0,m:"w1"},{t:1,m:"l2"},{t:6,m:"l3"}],
-    [null,       {t:0,m:"w4"},{t:0,m:"w5"},{t:1,m:"l6"},{t:1,m:"l7"}],
-    [{t:5,m:"l8"},{t:2,m:"l9"},{t:0,m:"w10"},{t:1,m:"l11"},{t:0,m:"w12"}],
-    [{t:2,m:"l13"},{t:3,m:"l14"},{t:0,m:"w15"},{t:0,m:"w16"},null],
-    [{t:4,m:"l17"},{t:2,m:"l18"},{t:0,m:"w19"},null,       null]
+    [null,       null,       {t:0,m:"w"},{t:0,m:"w"},{t:0,m:"w"}],
+    [null,       {t:0,m:"w"},{t:0,m:"w"},{t:6,m:"l"},{t:0,m:"w"}],
+    [{t:5,m:"l"},{t:2,m:"l"},{t:0,m:"w"},{t:1,m:"l"},{t:0,m:"w"}],
+    [{t:2,m:"l"},{t:3,m:"l"},{t:0,m:"w"},{t:0,m:"w"},null],
+    [{t:4,m:"l"},{t:2,m:"l"},{t:0,m:"w"},null,       null]
   ]
 );
 
+export const GAME_CONFIG = Object.freeze({
+  shipStartQ: 0,
+  shipStartR: 0,
+  shipStartS: 0
+});
 
-export const TILEMAP = Object.freeze([
-  {id:0, t:0},
-  {id:1, t:0},
-  {id:2, t:0},
-  {id:3, t:0},
-  {id:4, t:0},
-  {id:5, t:0},
-  {id:6, t:0},
-  {id:7, t:0},
-  {id:8, t:0},
-  {id:9, t:1},
-  {id:10, t:0},
-  {id:11, t:0},
-  {id:12, t:0},
-  {id:13, t:0},
-  {id:14, t:0},
-  {id:15, t:0},
-  {id:16, t:0},
-  {id:17, t:0},
-  {id:18, t:0}
-]);
+export default Component.extend(EKMixin, {
 
-export default Component.extend({
+  ships: emberArray(),
+
+
+  map: MAP,
 
   tileGraphics: [],
   showTiles: true,
-
   tilesLoaded: null,
+  shipImage: "images/ship.svg",
 
-  init() {
-    this._super(...arguments);
-  },
+  shipHex: null,
 
   didInsertElement() {
     this._super(...arguments);
@@ -68,12 +61,162 @@ export default Component.extend({
 
     let canvas = document.getElementById('gamecanvas-flat');
     let rect = canvas.getBoundingClientRect();
-    let centerX = rect.width / 2;
-    let centerY = rect.height / 2;
+    let centerX = (rect.width / 2) + rect.left;
+    let centerY = (rect.height / 2) + rect.top;
     this.set('rect', rect);
     this.set('centerX', centerX);
     this.set('centerY', centerY);
+
+
+    this.set('currentLayout', Layout.create({
+      orientation: LAYOUTS.FLAT,
+      size: Point.create({x:48, y:48}),
+      origin: Point.create({x:0, y:0})
+    }));
+
+    this.set('currentHexes', this.createHexesFromMap(MAP));
+
+    let startShipHex = this.currentHexes.find((hex) => {
+      return (GAME_CONFIG.shipStartQ === hex.q) &&
+        (GAME_CONFIG.shipStartR === hex.r) &&
+        (GAME_CONFIG.shipStartS === hex.s)
+    });
+    // console.log('startShipHex', startShipHex);
+
+    this.set('shipHex', startShipHex);
+    let shipPoint = this.currentLayout.hexToPixel(startShipHex)
+    console.log('shipPoint', shipPoint);
+    this.set('shipPoint', shipPoint);
+
+
+    this.setupShip();
+
+    this.set('keyboardActivated', true);
   },
+
+  setupShip() {
+    let ships = emberArray();
+
+    // console.log('startHex', this.shipHex);
+
+    // let ship = Ship.create({
+    //   id: 1,
+    //   mapCenterX: this.centerX,
+    //   mapCenterY: this.centerY,
+    //   hexLayout: this.currentLayout,
+    //   hex: this.shipHex
+    // });
+    // this.set('ship', ship);
+    ships.push(Ship.create({
+      id: 1,
+      mapCenterX: this.centerX,
+      mapCenterY: this.centerY,
+      hexLayout: this.currentLayout,
+      hex: this.shipHex,
+      point: this.shipPoint
+    }));
+    this.set('ships', ships);
+
+
+  },
+
+
+
+  // direction: 2
+  up: on(keyDown('KeyW'), function() {
+    if(this.get('moveTask.isIdle')) {
+      this.get('moveTask').perform(0, -1);
+    }
+  }),
+
+  // direction: 2
+  down: on(keyDown('KeyS'), function() {
+    if(this.get('moveTask.isIdle')) {
+      this.get('moveTask').perform(0, 1);
+    }
+  }),
+
+  // direction: 5
+  downright: on(keyDown('KeyD'), function() {
+    if(this.get('moveTask.isIdle')) {
+      this.get('moveTask').perform(1, 0);
+    }
+  }),
+
+  // direction: 3
+  upleft: on(keyDown('KeyQ'), function() {
+    if(this.get('moveTask.isIdle')) {
+      this.get('moveTask').perform(-1, 0);
+    }
+  }),
+
+  // direction: 1
+  upright: on(keyDown('KeyE'), function() {
+    if(this.get('moveTask.isIdle')) {
+      this.get('moveTask').perform(1, -1);
+    }
+  }),
+
+  // direction: 4
+  downleft: on(keyDown('KeyA'), function() {
+    if(this.get('moveTask.isIdle')) {
+      this.get('moveTask').perform(-1, 1);
+    }
+  }),
+
+  canMoveTo: function(targetHex) {
+    // console.log('canMoveTo', targetHex);
+
+    if (!targetHex) {
+      return false;
+    }
+    // out of bounds
+    // if (x <= 0 || y <= 0 || x > this.boardWidth || y > this.boardHeight) {
+    //   return false;
+    // }
+
+    // water?
+    return targetHex.map.m === 'w';
+  },
+
+  moveTask: task(function * (q, r) {
+    // TODO  out of bounds wont animate correctly.
+    // used to just try to move x,y and when it was out of bounds,
+    // it moved it back. now we can't get out of bounds
+
+    // moveTask: task(function * (x,y) {
+    let ship = this.ships.objectAt(0);
+
+    let targetQ = this.shipHex.q + q;
+    let targetR = this.shipHex.r + r;
+    let targetS = -(targetQ + targetR);
+
+    let startHex = this.shipHex;
+    // let startPoint = this.shipPoint;
+
+    // copied code
+    let targetHex = this.currentHexes.find((hex) => {
+      return (targetQ === hex.q) &&
+        (targetR === hex.r) &&
+        (targetS === hex.s)
+    })
+    // console.log('targetHex', targetHex);
+
+    if( ! targetHex ) {
+      return;  // see out of bounds comment above
+    }
+
+    this.set('shipHex', targetHex);
+    ship.set('hex', targetHex);
+
+    if( ! this.canMoveTo(targetHex)) {
+      yield timeout(30);
+      this.set('shipHex', startHex);
+      ship.set('hex', startHex);
+    }
+
+    // debugger;
+  }),
 
 
   // TODO should use ember-concurrency task here and yield on loading
@@ -89,27 +232,23 @@ export default Component.extend({
         tileGraphicsLoaded++;
         if (tileGraphicsLoaded === tileset.length) {
           set(this, 'tilesLoaded', MAP);
+          // this.drawGrids(MAP);
+          this.drawGrid(
+            "gamecanvas-flat",
+            "hsl(60, 10%, 85%)",
+            true,
+            this.currentLayout,
+            this.currentHexes,
+            this.showTiles
+          );
+
         }
       }
 
-      // console.log(tileGraphic);
       this.tileGraphics.pushObject(tileGraphic);
     }
   },
 
-  // buildHexagons(map) {
-  //   var hexes = [];
-  //
-  //   let hex1 = Hex.create({q:q, r:r, s:-q-r, id:id}
-  //   return hexes;
-  // },
-
-  mapLoaded: computed('tilesLoaded', function() {
-    if (this.tilesLoaded) {
-      this.drawGrids(MAP);
-    }
-    return '';
-  }),
 
   createHexesFromMap(map) {
     assert('Map array MUST be odd lengths to have a hexagonal shape.',(map.length % 2 === 1) && (map[0].length % 2 === 1));
@@ -148,103 +287,6 @@ export default Component.extend({
     return hexes;
   },
 
-  drawGrids(map) {
-
-
-    // this.drawGrid(
-    //   "layout-test-orientation-pointy",
-    //   "hsl(60, 10%, 90%)",
-    //   true,
-    //   Layout.create({
-    //     orientation: LAYOUTS.POINTY,
-    //     size: Point.create({x:25, y:25}),
-    //     origin: Point.create({x:0, y:0})
-    //   })
-    // );
-    // this.drawGrid(
-    //   "layout-test-orientation-flat",
-    //   "hsl(60, 10%, 85%)",
-    //   true,
-    //   Layout.create({
-    //     orientation: LAYOUTS.FLAT,
-    //     size: Point.create({x:25, y:25}),
-    //     origin: Point.create({x:0, y:0})
-    //   })
-    // );
-    //
-    // // sizes
-    // this.drawGrid(
-    //   "layout-test-size-1",
-    //   "hsl(60, 10%, 85%)",
-    //   false,
-    //   Layout.create({
-    //     orientation: LAYOUTS.POINTY,
-    //     size: Point.create({x:10, y:10}),
-    //     origin: Point.create({x:0, y:0})
-    //   })
-    // );
-    // this.drawGrid("layout-test-size-2", "hsl(60, 10%, 90%)", false,
-    //   Layout.create({
-    //     orientation: LAYOUTS.POINTY,
-    //     size: Point.create({x:20, y:20}),
-    //     origin: Point.create({x:0, y:0})
-    //   })
-    // );
-    // this.drawGrid(
-    //   "layout-test-size-3",
-    //   "hsl(60, 10%, 85%)",
-    //   false,
-    //   Layout.create({
-    //     orientation: LAYOUTS.POINTY,
-    //     size: Point.create({x:40, y:40}),
-    //     origin: Point.create({x:0, y:0})
-    //   })
-    // );
-
-    // this.drawGrid(
-    //   "shape-pointy-hexagon",
-    //   "hsl(60, 10%, 85%)",
-    //   true,
-    //   Layout.create({
-    //     orientation: LAYOUTS.FLAT,
-    //     size: Point.create({x:50, y:50}),
-    //     origin: Point.create({x:0, y:0})
-    //   }),
-    //   undefined,
-    //   false
-    // );
-
-    this.set('currentLayout', Layout.create({
-      orientation: LAYOUTS.FLAT,
-      size: Point.create({x:48, y:48}),
-      origin: Point.create({x:0, y:0})
-    }));
-
-// console.log(this.shapeHexagon(2));
-
-    this.set('currentHexes', this.createHexesFromMap(map));
-
-    this.drawGrid(
-      "gamecanvas-flat",
-      "hsl(60, 10%, 85%)",
-      true,
-      this.currentLayout,
-      this.currentHexes,
-      this.showTiles
-    );
-
-
-    // this.drawGrid("shape-flat-hexagon",
-    //   "hsl(60, 10%, 90%)",
-    //   false,
-    //   Layout.create({
-    //     orientation: LAYOUTS.POINTY,
-    //     size: Point.create({x:15, y:15}),
-    //     origin: Point.create({x:0, y:0})
-    //   }),
-    //   this.shapeHexagon(6));
-
-  },
 
   drawGrid(id, backgroundColor, withLabels, layout, hexes, withTiles) {
     var canvas = document.getElementById(id);
@@ -376,10 +418,11 @@ export default Component.extend({
 
   actions: {
     hexReport(hexId, event) {
+      console.group('hex report');
+
       let x = event.clientX - this.centerX;
       let y = event.clientY - this.centerY;
-
-      // console.log('click', this.rect, event, "x:", x, "y:", y);
+      console.log('click', this.rect, event, "x:", x, "y:", y);
       let point = Point.create({x:x, y:y});
       let clickedHex = this.currentLayout.pixelToHex(point).round();
 
@@ -387,7 +430,23 @@ export default Component.extend({
         return (clickedHex.q === hex.q) && (clickedHex.r === hex.r) && (clickedHex.s === hex.s)
       })
       console.log('mappedHex', mappedHex);
-      // console.log(clickedHex);
+
+      let hexToPixelPoint = this.currentLayout.hexToPixel(clickedHex);
+      console.log('point', hexToPixelPoint);
+
+      // TODO Maybe move ship on click
+      if(this.get('moveTask.isIdle')) {
+        let difR =  mappedHex.r < this.shipHex.r ? -1 : (mappedHex.r === this.shipHex.r) ? 0 : 1;
+        let difQ =  mappedHex.q < this.shipHex.q ? -1 : (mappedHex.q === this.shipHex.q) ? 0 : 1;
+
+        console.log(difQ, difR);
+        if (difR !== difQ) {
+          // prevent moving more than one square diagonally
+          this.get('moveTask').perform(difQ, difR);
+        }
+      }
+
+      console.groupEnd();
     },
 
     hexMouseMove(event) {
@@ -403,15 +462,6 @@ export default Component.extend({
 
     toggleTiles() {
       this.toggleProperty('showTiles');
-
-      // this.drawGrid(
-      //   "gamecanvas-flat",
-      //   "hsl(60, 10%, 85%)",
-      //   !this.showTiles,
-      //   this.currentLayout,
-      //   this.currentHexes,
-      //   this.showTiles
-      // );
 
       var canvas = document.getElementById('gamecanvas-flat');
       var ctx = canvas.getContext('2d');

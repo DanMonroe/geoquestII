@@ -2,6 +2,26 @@ import EmberObject, { computed } from '@ember/object';
 import {assert} from '@ember/debug';
 import Hex from './hex';
 
+export const DIRECTIONS = Object.freeze([
+   {dir:'SE', q:1, r:0, s:-1},
+   {dir:'NE', q:1, r:-1,s: 0},
+   {dir:'N', q:0, r:-1,s: 1},
+   {dir:'NW', q:-1,r: 0,s: 1},
+   {dir:'SW', q:-1,r: 1,s: 0},
+   {dir:'S', q:0, r:1, s:-1}
+]);
+// directions: computed(function() {
+//     return [
+//       Hex.create({q:1, r:0, s:-1}),
+//       Hex.create({q:1, r:-1,s: 0}),
+//       Hex.create({q:0, r:-1,s: 1}),
+//       Hex.create({q:-1,r: 0,s: 1}),
+//       Hex.create({q:-1,r: 1,s: 0}),
+//       Hex.create({q:0, r:1, s:-1})
+//     ];
+//   }
+// ),
+
 export default EmberObject.extend({
   name: 'Hex',
 
@@ -23,17 +43,17 @@ export default EmberObject.extend({
       ];
     }
   ),
-  diagonals:  computed(function() {
-      return [
-        Hex.create({q:2, r:-1, s:-1}),
-        Hex.create({q:1, r:-2, s:1 }),
-        Hex.create({q:-1,r:-1, s:2 }),
-        Hex.create({q:-2,r: 1, s:1 }),
-        Hex.create({q:-1,r: 2, s:-1}),
-        Hex.create({q:1, r:1,  s:-2})
-      ];
-    }
-  ),
+  // diagonals:  computed(function() {
+  //     return [
+  //       Hex.create({q:2, r:-1, s:-1}),
+  //       Hex.create({q:1, r:-2, s:1 }),
+  //       Hex.create({q:-1,r:-1, s:2 }),
+  //       Hex.create({q:-2,r: 1, s:1 }),
+  //       Hex.create({q:-1,r: 2, s:-1}),
+  //       Hex.create({q:1, r:1,  s:-2})
+  //     ];
+  //   }
+  // ),
 
   init() {
     this._super(...arguments);
@@ -42,33 +62,33 @@ export default EmberObject.extend({
   add(b) {
     return Hex.create({q:this.q + b.q, r:this.r + b.r, s:this.s + b.s});
   },
-  subtract(b) {
-    return Hex.create({q:this.q - b.q, r:this.r - b.r, s:this.s - b.s});
-  },
-  scale(k) {
-    return Hex.create({q:this.q * k, r:this.r * k, s:this.s * k});
-  },
-  rotateLeft() {
-    return Hex.create({q:-this.s, r:-this.q, s:-this.r});
-  },
-  rotateRight() {
-    return Hex.create({q:-this.r, r:-this.s, s:-this.q, });
-  },
+  // subtract(b) {
+  //   return Hex.create({q:this.q - b.q, r:this.r - b.r, s:this.s - b.s});
+  // },
+  // scale(k) {
+  //   return Hex.create({q:this.q * k, r:this.r * k, s:this.s * k});
+  // },
+  // rotateLeft() {
+  //   return Hex.create({q:-this.s, r:-this.q, s:-this.r});
+  // },
+  // rotateRight() {
+  //   return Hex.create({q:-this.r, r:-this.s, s:-this.q });
+  // },
   direction(direction) {
     return this.directions[direction];
   },
   neighbor(direction) {
     return this.add(this.direction(direction));
   },
-  diagonalNeighbor(direction) {
-    return this.add(this.diagonals[direction]);
-  },
-  len() {
-    return (Math.abs(this.q) + Math.abs(this.r) + Math.abs(this.s)) / 2;
-  },
-  distance(b) {
-    return this.subtract(b).len();
-  },
+  // diagonalNeighbor(direction) {
+  //   return this.add(this.diagonals[direction]);
+  // },
+  // len() {
+  //   return (Math.abs(this.q) + Math.abs(this.r) + Math.abs(this.s)) / 2;
+  // },
+  // distance(b) {
+  //   return this.subtract(b).len();
+  // },
   round() {
     var qi = Math.round(this.q);
     var ri = Math.round(this.r);
