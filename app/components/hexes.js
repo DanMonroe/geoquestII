@@ -26,18 +26,21 @@ export const TILEIMAGES = Object.freeze([
 
 export const MAP = Object.freeze(
   [
-    [null,       null,       {t:0,m:"w"},{t:0,m:"w"},{t:0,m:"w"}],
-    [null,       {t:0,m:"w"},{t:0,m:"w"},{t:6,m:"l"},{t:0,m:"w"}],
-    [{t:5,m:"l"},{t:2,m:"l"},{t:0,m:"w"},{t:1,m:"l"},{t:0,m:"w"}],
-    [{t:2,m:"l"},{t:3,m:"l"},{t:0,m:"w"},{t:0,m:"w"},null],
-    [{t:4,m:"l"},{t:2,m:"l"},{t:0,m:"w"},null,       null]
+    [null,       null,       null,       {t:0,m:"w"},{t:0,m:"w"},{t:0,m:"w"},{t:0,m:"w"}],
+    [null,       null,       {t:0,m:"w"},{t:0,m:"w"},{t:0,m:"w"},{t:0,m:"w"},{t:0,m:"w"}],
+    [null,       {t:0,m:"w"},{t:0,m:"w"},{t:6,m:"l"},{t:0,m:"w"},{t:0,m:"w"},{t:0,m:"w"}],
+    [{t:5,m:"l"},{t:2,m:"l"},{t:0,m:"w"},{t:1,m:"l"},{t:0,m:"w"},{t:6,m:"l"},{t:0,m:"w"}],
+    [{t:0,m:"w"},{t:0,m:"w"},{t:2,m:"l"},{t:3,m:"l"},{t:0,m:"w"},{t:0,m:"w"},null],
+    [{t:0,m:"w"},{t:0,m:"w"},{t:4,m:"l"},{t:2,m:"l"},{t:0,m:"w"},null,       null],
+    [{t:0,m:"w"},{t:4,m:"l"},{t:2,m:"l"},{t:0,m:"w"},null,       null,       null]
   ]
 );
 
+// start values must sum to 0
 export const GAME_CONFIG = Object.freeze({
-  shipStartQ: 0,
-  shipStartR: 0,
-  shipStartS: 0
+  shipStartQ: 2,
+  shipStartR: -1,
+  shipStartS: -1
 });
 
 export default Component.extend(EKMixin, {

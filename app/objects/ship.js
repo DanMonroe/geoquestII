@@ -10,8 +10,8 @@ export default EmberObject.extend({
 // console.log(this.hex);
 // debugger;
       let point = this.hexLayout.hexToPixel(this.hex);
-      let newx = this.mapCenterX + parseFloat(point.x - 30);
-      let newy = this.mapCenterY + parseFloat(point.y - 30);
+      let newx = this.mapCenterX + parseFloat(point.x - 8);   // - 30
+      let newy = this.mapCenterY + parseFloat(point.y + 10);  // - 30
 
       // console.log('ship hex', this.hex, point, newx, newy);
 
