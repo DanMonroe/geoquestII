@@ -32,17 +32,17 @@ export default EmberObject.extend({
   r: null,
   s: null,
 
-  directions: computed(function() {
-      return [
-        Hex.create({q:1, r:0, s:-1}),
-        Hex.create({q:1, r:-1,s: 0}),
-        Hex.create({q:0, r:-1,s: 1}),
-        Hex.create({q:-1,r: 0,s: 1}),
-        Hex.create({q:-1,r: 1,s: 0}),
-        Hex.create({q:0, r:1, s:-1})
-      ];
-    }
-  ),
+  // directions: computed(function() {
+  //     return [
+  //       Hex.create({q:1, r:0, s:-1}),
+  //       Hex.create({q:1, r:-1,s: 0}),
+  //       Hex.create({q:0, r:-1,s: 1}),
+  //       Hex.create({q:-1,r: 0,s: 1}),
+  //       Hex.create({q:-1,r: 1,s: 0}),
+  //       Hex.create({q:0, r:1, s:-1})
+  //     ];
+  //   }
+  // ),
   // diagonals:  computed(function() {
   //     return [
   //       Hex.create({q:2, r:-1, s:-1}),
@@ -59,6 +59,7 @@ export default EmberObject.extend({
     this._super(...arguments);
     assert('q + r + s must be 0', Math.round(this.q + this.r + this.s) === 0);
   },
+
   add(b) {
     return Hex.create({q:this.q + b.q, r:this.r + b.r, s:this.s + b.s});
   },

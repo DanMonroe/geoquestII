@@ -7,12 +7,13 @@ import { EKMixin, keyDown } from 'ember-keyboard';
 import { on } from '@ember/object/evented';
 import { task, timeout } from 'ember-concurrency';
 import move from 'ember-animated/motions/move';
+import {inject as service} from '@ember/service';
 
 import Hex, { DIRECTIONS } from '../objects/hex';
 import Layout, { LAYOUTS } from '../objects/layout';
 import Point from '../objects/point';
 import Orientation from '../objects/orientation';
-import Ship from '../objects/ship'
+import Ship from '../objects/ship';
 
 export const TILEIMAGES = Object.freeze([
   "/images/hex/ZeshioHexKitDemo_096.png", // water
@@ -26,32 +27,47 @@ export const TILEIMAGES = Object.freeze([
 
 export const MAP = Object.freeze(
   [
-    [null,       null,       null,       {t:0,m:"w"},{t:0,m:"w"},{t:0,m:"w"},{t:0,m:"w"}],
-    [null,       null,       {t:0,m:"w"},{t:0,m:"w"},{t:0,m:"w"},{t:0,m:"w"},{t:0,m:"w"}],
-    [null,       {t:0,m:"w"},{t:0,m:"w"},{t:6,m:"l"},{t:0,m:"w"},{t:0,m:"w"},{t:0,m:"w"}],
-    [{t:5,m:"l"},{t:2,m:"l"},{t:0,m:"w"},{t:1,m:"l"},{t:0,m:"w"},{t:6,m:"l"},{t:0,m:"w"}],
-    [{t:0,m:"w"},{t:0,m:"w"},{t:2,m:"l"},{t:3,m:"l"},{t:0,m:"w"},{t:0,m:"w"},null],
-    [{t:0,m:"w"},{t:0,m:"w"},{t:4,m:"l"},{t:2,m:"l"},{t:0,m:"w"},null,       null],
-    [{t:0,m:"w"},{t:4,m:"l"},{t:2,m:"l"},{t:0,m:"w"},null,       null,       null]
+    [null,                        null,                         null,                         {id:21,col:3,row:0,t:0,m:"w"},{id:28,col:4,row:0,t:0,m:"w"},{id:35,col:5,row:0,t:0,m:"w"},{id:42,col:6,row:0,t:0,m:"w"}],
+    [null,                        null,                         {id:15,col:2,row:1,t:0,m:"w"},{id:22,col:3,row:1,t:0,m:"w"},{id:29,col:4,row:1,t:0,m:"w"},{id:36,col:5,row:1,t:0,m:"w"},{id:43,col:6,row:1,t:0,m:"w"}],
+    [null,                        {id:9, col:1,row:2,t:0,m:"w"},{id:16,col:2,row:2,t:0,m:"w"},{id:23,col:3,row:2,t:6,m:"l"},{id:30,col:4,row:2,t:0,m:"w"},{id:37,col:5,row:2,t:0,m:"w"},{id:44,col:6,row:2,t:0,m:"w"}],
+    [{id:3,col:0,row:3,t:5,m:"l"},{id:10,col:1,row:3,t:2,m:"l"},{id:17,col:2,row:3,t:0,m:"w"},{id:24,col:3,row:3,t:1,m:"l"},{id:31,col:4,row:3,t:0,m:"w"},{id:38,col:5,row:3,t:6,m:"l"},{id:45,col:6,row:3,t:0,m:"w"}],
+    [{id:4,col:0,row:4,t:0,m:"w"},{id:11,col:1,row:4,t:0,m:"w"},{id:18,col:2,row:4,t:2,m:"l"},{id:25,col:3,row:4,t:3,m:"l"},{id:32,col:4,row:4,t:0,m:"w"},{id:39,col:5,row:4,t:0,m:"w"},null],
+    [{id:5,col:0,row:5,t:0,m:"w"},{id:12,col:1,row:5,t:0,m:"w"},{id:19,col:2,row:5,t:4,m:"l"},{id:26,col:3,row:5,t:2,m:"l"},{id:33,col:4,row:5,t:0,m:"w"},null,                         null],
+    [{id:6,col:0,row:6,t:0,m:"w"},{id:13,col:1,row:6,t:4,m:"l"},{id:20,col:2,row:6,t:2,m:"l"},{id:27,col:3,row:6,t:0,m:"w"},null,                         null,                         null]
   ]
 );
 
 // start values must sum to 0
 export const GAME_CONFIG = Object.freeze({
-  shipStartQ: 2,
-  shipStartR: -1,
-  shipStartS: -1
+  shipStartQ: 0,
+  shipStartR: 0,
+  shipStartS: 0,
+
+  tempTargetQ: 0,
+  tempTargetR: 2,
+  tempTargetS: -2,
 });
+  // tempTargetQ: 0,
+  // tempTargetR: -1,
+  // tempTargetS: 1,
+
+// working
+  // tempTargetQ: 2,
+  // tempTargetR: -3,
+  // tempTargetS: 1
 
 export default Component.extend(EKMixin, {
 
   ships: emberArray(),
 
+  mapService: service('map'),
+  hexService: service('hex'),
 
   map: MAP,
 
   tileGraphics: [],
-  showTiles: true,
+  showTiles: false,
+  showShip: false,
   tilesLoaded: null,
   shipImage: "images/ship.svg",
 
@@ -77,9 +93,12 @@ export default Component.extend(EKMixin, {
       origin: Point.create({x:0, y:0})
     }));
 
-    this.set('currentHexes', this.createHexesFromMap(MAP));
+    // Map setup
+    this.mapService.set('hexMap', this.createHexesFromMap(MAP));
+    this.mapService.set('twoDimensionalMap', MAP)
 
-    let startShipHex = this.currentHexes.find((hex) => {
+    // Ship setup
+    let startShipHex = this.mapService.hexMap.find((hex) => {
       return (GAME_CONFIG.shipStartQ === hex.q) &&
         (GAME_CONFIG.shipStartR === hex.r) &&
         (GAME_CONFIG.shipStartS === hex.s)
@@ -88,11 +107,13 @@ export default Component.extend(EKMixin, {
 
     this.set('shipHex', startShipHex);
     let shipPoint = this.currentLayout.hexToPixel(startShipHex)
-    console.log('shipPoint', shipPoint);
+    // console.log('shipPoint', shipPoint);
     this.set('shipPoint', shipPoint);
 
 
-    this.setupShip();
+    if (this.showShip) {
+      this.setupShip();
+    }
 
     this.set('keyboardActivated', true);
   },
@@ -107,9 +128,13 @@ export default Component.extend(EKMixin, {
     //   mapCenterX: this.centerX,
     //   mapCenterY: this.centerY,
     //   hexLayout: this.currentLayout,
-    //   hex: this.shipHex
+    //   hex: this.shipHex,
+    //   point: this.shipPoint
     // });
     // this.set('ship', ship);
+
+
+
     ships.push(Ship.create({
       id: 1,
       mapCenterX: this.centerX,
@@ -188,6 +213,7 @@ export default Component.extend(EKMixin, {
     // it moved it back. now we can't get out of bounds
 
     // moveTask: task(function * (x,y) {
+    // let ship = this.ship;
     let ship = this.ships.objectAt(0);
 
     let targetQ = this.shipHex.q + q;
@@ -198,7 +224,7 @@ export default Component.extend(EKMixin, {
     // let startPoint = this.shipPoint;
 
     // copied code
-    let targetHex = this.currentHexes.find((hex) => {
+    let targetHex = this.mapService.hexMap.find((hex) => {
       return (targetQ === hex.q) &&
         (targetR === hex.r) &&
         (targetS === hex.s)
@@ -241,7 +267,7 @@ export default Component.extend(EKMixin, {
             "hsl(60, 10%, 85%)",
             true,
             this.currentLayout,
-            this.currentHexes,
+            this.mapService.hexMap,
             this.showTiles
           );
 
@@ -259,34 +285,19 @@ export default Component.extend(EKMixin, {
     let hexes = [];
     let size = ((map.length -1) / 2);
 
-    // console.log(size);
-    let id = 0;
-
-    /**
-       for (var q_column = -2; q_column <= 2; q_column++) {
-         var r1 = Math.max(-2, -q_column-2);        Math.max(-2, -(-2)-2) Math.max(-2, 0) = 0
-         var r2 = Math.min(2, -q_column+2);         Math.min(2, -(-2)+2)  Math.min(2, 4) = 2
-         for (var row = 0; row <= 2; row++) {
-            //for (var row = r1; row <= r2; row++) {
-           hexes.push(Hex.create({q:q_column, r:row, s:-q_column-row, id:id}));
-            id++
-         }
-       }
-     */
-// console.group('hexes');
     for (var q_column = -size; q_column <= size; q_column++) {
       var r1 = Math.max(-size, -q_column-size);
       var r2 = Math.min(size, -q_column+size);
 // console.log(q_column, r1, r2);
       for (var row = r1; row <= r2; row++) {
         let mapObject = map[row+size][q_column+size];
-        // let mapObject = map[q_column+size][row+size];
-// console.log('hex q_column:', q_column, 'row:', row, map[q_column+size][row+size]);
-        hexes.push(Hex.create({q:q_column, r:row, s:-q_column-row, id:id, map:mapObject}));
-        id++
+        mapObject.q = q_column;
+        mapObject.r = row;
+        mapObject.s = -q_column-row;
+        // console.log(row+size, q_column+size, mapObject);
+        hexes.push(Hex.create({id:mapObject.id, q:q_column, r:row, s:-q_column-row, map:mapObject}));
       }
     }
-// console.groupEnd()
     return hexes;
   },
 
@@ -319,11 +330,14 @@ export default Component.extend(EKMixin, {
     });
   },
 
-  drawHex(ctx, layout, hex) {
+  drawHex(ctx, layout, hex, fillStyle) {
     var corners = layout.polygonCorners(hex);
     ctx.beginPath();
     ctx.strokeStyle = "black";
     ctx.lineWidth = 1;
+    if (fillStyle) {
+      ctx.fillStyle = fillStyle;
+    }
     ctx.moveTo(corners[5].x, corners[5].y);
     for (var i = 0; i < 6; i++) {
       ctx.lineTo(corners[i].x, corners[i].y);
@@ -363,7 +377,8 @@ export default Component.extend(EKMixin, {
     ctx.font = "14px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText((hex.id + " " + hex.map.m + ":" + hex.map.t + ":" + hex.q + "," + hex.r), center.x, center.y);
+    ctx.fillText((hex.map.id + " " + hex.map.m + ":" + hex.map.t), center.x, center.y-7);
+    ctx.fillText((hex.q + "," + hex.r), center.x, center.y+8);
     // ctx.fillText((hex.id + ": " + hex.q + "," + hex.r + "," + hex.s), center.x, center.y);
     // ctx.fillText(hex.len() === 0? "0: q,r,s" : (hex.id + ": " + hex.q + "," + hex.r + "," + hex.s), center.x, center.y);
   },
@@ -429,7 +444,7 @@ export default Component.extend(EKMixin, {
       let point = Point.create({x:x, y:y});
       let clickedHex = this.currentLayout.pixelToHex(point).round();
 
-      let mappedHex = this.currentHexes.find((hex) => {
+      let mappedHex = this.mapService.hexMap.find((hex) => {
         return (clickedHex.q === hex.q) && (clickedHex.r === hex.r) && (clickedHex.s === hex.s)
       })
       console.log('mappedHex', mappedHex);
@@ -469,7 +484,7 @@ export default Component.extend(EKMixin, {
       var canvas = document.getElementById('gamecanvas-flat');
       var ctx = canvas.getContext('2d');
 
-      this.currentHexes.forEach((hex) => {
+      this.mapService.hexMap.forEach((hex) => {
         if (this.showTiles) {
           this.drawHexTile(ctx, this.currentLayout, hex);
         } else {
@@ -477,7 +492,27 @@ export default Component.extend(EKMixin, {
         }
       });
 
+    },
+
+    findPath() {
+      let targetHex = this.mapService.hexMap.find((hex) => {
+        return (GAME_CONFIG.tempTargetQ === hex.q) &&
+          (GAME_CONFIG.tempTargetR === hex.r) &&
+          (GAME_CONFIG.tempTargetS === hex.s)
+      });
+      // console.log('shipHex', this.shipHex);
+      // console.log('targetHex', targetHex);
+
+      console.log('findPath from hex', this.shipHex.id, 'to', targetHex.id);
+      let path = this.mapService.findPath(this.shipHex, targetHex);
+      console.log('path', path);
+
+      // let path = this.mapService.findPath(this.mapService.hexMap, this.shipHex, targetHex);
+
     }
 
-  }
+
+  }  // actions
+
+
 });

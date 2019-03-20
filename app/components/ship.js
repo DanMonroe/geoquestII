@@ -36,6 +36,9 @@ export default Component.extend({
   didInsertElement() {
     this._super(...arguments);
 
+    // console.log('did insert');
+    // console.log(this.ship);
+
 //     let ships = emberArray();
 //     // let startHex = this.currentMapHexes.find((hex) => {
 //     //   return (+this.shipHex.q === hex.q) &&
