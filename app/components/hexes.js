@@ -15,38 +15,44 @@ import Point from '../objects/point';
 import Orientation from '../objects/orientation';
 import Ship from '../objects/ship';
 
-export const TILEIMAGES = Object.freeze([
-  "/images/hex/ZeshioHexKitDemo_096.png", // water
-  "/images/hex/ZeshioHexKitDemo_104.png",  // sand
-  "/images/hex/ZeshioHexKitDemo_000.png", // lava
-  "/images/hex/ZeshioHexKitDemo_005.png", // cool lava rock
-  "/images/hex/ZeshioHexKitDemo_023.png",
-  "/images/hex/ZeshioHexKitDemo_047.png",
-  "/images/hex/ZeshioHexKitDemo_102.png", // palm trees
-]);
+import { TILEIMAGES, MAP } from '../maps/hex1';
 
-export const MAP = Object.freeze(
-  [
-    [null,                        null,                         null,                         {id:21,col:3,row:0,t:0,m:"w"},{id:28,col:4,row:0,t:0,m:"w"},{id:35,col:5,row:0,t:0,m:"w"},{id:42,col:6,row:0,t:0,m:"w"}],
-    [null,                        null,                         {id:15,col:2,row:1,t:0,m:"w"},{id:22,col:3,row:1,t:0,m:"w"},{id:29,col:4,row:1,t:0,m:"w"},{id:36,col:5,row:1,t:0,m:"w"},{id:43,col:6,row:1,t:0,m:"w"}],
-    [null,                        {id:9, col:1,row:2,t:0,m:"w"},{id:16,col:2,row:2,t:0,m:"w"},{id:23,col:3,row:2,t:6,m:"l"},{id:30,col:4,row:2,t:0,m:"w"},{id:37,col:5,row:2,t:0,m:"w"},{id:44,col:6,row:2,t:0,m:"w"}],
-    [{id:3,col:0,row:3,t:5,m:"l"},{id:10,col:1,row:3,t:2,m:"l"},{id:17,col:2,row:3,t:0,m:"w"},{id:24,col:3,row:3,t:1,m:"l"},{id:31,col:4,row:3,t:0,m:"w"},{id:38,col:5,row:3,t:6,m:"l"},{id:45,col:6,row:3,t:0,m:"w"}],
-    [{id:4,col:0,row:4,t:0,m:"w"},{id:11,col:1,row:4,t:0,m:"w"},{id:18,col:2,row:4,t:2,m:"l"},{id:25,col:3,row:4,t:3,m:"l"},{id:32,col:4,row:4,t:0,m:"w"},{id:39,col:5,row:4,t:0,m:"w"},null],
-    [{id:5,col:0,row:5,t:0,m:"w"},{id:12,col:1,row:5,t:0,m:"w"},{id:19,col:2,row:5,t:4,m:"l"},{id:26,col:3,row:5,t:2,m:"l"},{id:33,col:4,row:5,t:0,m:"w"},null,                         null],
-    [{id:6,col:0,row:6,t:0,m:"w"},{id:13,col:1,row:6,t:4,m:"l"},{id:20,col:2,row:6,t:2,m:"l"},{id:27,col:3,row:6,t:0,m:"w"},null,                         null,                         null]
-  ]
-);
+// export const TILEIMAGES = Object.freeze([
+//   "/images/hex/ZeshioHexKitDemo_096.png", // water
+//   "/images/hex/ZeshioHexKitDemo_104.png",  // sand
+//   "/images/hex/ZeshioHexKitDemo_000.png", // lava
+//   "/images/hex/ZeshioHexKitDemo_005.png", // cool lava rock
+//   "/images/hex/ZeshioHexKitDemo_023.png",
+//   "/images/hex/ZeshioHexKitDemo_047.png",
+//   "/images/hex/ZeshioHexKitDemo_102.png", // palm trees
+// ]);
+
+// export const MAP = Object.freeze(
+//   [
+//     [null,                        null,                         null,                         {id:21,col:3,row:0,t:0,m:"w"},{id:28,col:4,row:0,t:0,m:"w"},{id:35,col:5,row:0,t:0,m:"w"},{id:42,col:6,row:0,t:0,m:"w"}],
+//     [null,                        null,                         {id:15,col:2,row:1,t:0,m:"w"},{id:22,col:3,row:1,t:0,m:"w"},{id:29,col:4,row:1,t:0,m:"w"},{id:36,col:5,row:1,t:0,m:"w"},{id:43,col:6,row:1,t:0,m:"w"}],
+//     [null,                        {id:9, col:1,row:2,t:0,m:"w"},{id:16,col:2,row:2,t:0,m:"w"},{id:23,col:3,row:2,t:6,m:"l"},{id:30,col:4,row:2,t:0,m:"w"},{id:37,col:5,row:2,t:0,m:"w"},{id:44,col:6,row:2,t:0,m:"w"}],
+//     [{id:3,col:0,row:3,t:5,m:"l"},{id:10,col:1,row:3,t:2,m:"l"},{id:17,col:2,row:3,t:0,m:"w"},{id:24,col:3,row:3,t:1,m:"l"},{id:31,col:4,row:3,t:0,m:"w"},{id:38,col:5,row:3,t:6,m:"l"},{id:45,col:6,row:3,t:0,m:"w"}],
+//     [{id:4,col:0,row:4,t:0,m:"w"},{id:11,col:1,row:4,t:0,m:"w"},{id:18,col:2,row:4,t:2,m:"l"},{id:25,col:3,row:4,t:3,m:"l"},{id:32,col:4,row:4,t:0,m:"w"},{id:39,col:5,row:4,t:0,m:"w"},null],
+//     [{id:5,col:0,row:5,t:0,m:"w"},{id:12,col:1,row:5,t:0,m:"w"},{id:19,col:2,row:5,t:4,m:"l"},{id:26,col:3,row:5,t:2,m:"l"},{id:33,col:4,row:5,t:0,m:"w"},null,                         null],
+//     [{id:6,col:0,row:6,t:0,m:"w"},{id:13,col:1,row:6,t:4,m:"l"},{id:20,col:2,row:6,t:2,m:"l"},{id:27,col:3,row:6,t:0,m:"w"},null,                         null,                         null]
+//   ]
+// );
 
 // start values must sum to 0
 export const GAME_CONFIG = Object.freeze({
-  shipStartQ: 0,
-  shipStartR: 0,
-  shipStartS: 0,
+  shipStartQ: 2,
+  shipStartR: 1,
+  shipStartS: -3,
 
-  tempTargetQ: 0,
-  tempTargetR: 2,
-  tempTargetS: -2,
+  tempTargetQ: -2,
+  tempTargetR: 1,
+  tempTargetS: 1,
 });
+  // tempTargetQ: 0,
+  // tempTargetR: 2,
+  // tempTargetS: -2,
+
   // tempTargetQ: 0,
   // tempTargetR: -1,
   // tempTargetS: 1,
@@ -66,8 +72,8 @@ export default Component.extend(EKMixin, {
   map: MAP,
 
   tileGraphics: [],
-  showTiles: false,
-  showShip: false,
+  showTiles: true,
+  showShip: true,
   tilesLoaded: null,
   shipImage: "images/ship.svg",
 
@@ -203,8 +209,8 @@ export default Component.extend(EKMixin, {
     //   return false;
     // }
 
-    // water?
-    return targetHex.map.m === 'w';
+    // path.w = weight 0    water?
+    return targetHex.map.path.w === 0;
   },
 
   moveTask: task(function * (q, r) {
@@ -286,16 +292,26 @@ export default Component.extend(EKMixin, {
     let size = ((map.length -1) / 2);
 
     for (var q_column = -size; q_column <= size; q_column++) {
+
       var r1 = Math.max(-size, -q_column-size);
       var r2 = Math.min(size, -q_column+size);
-// console.log(q_column, r1, r2);
+
       for (var row = r1; row <= r2; row++) {
+
         let mapObject = map[row+size][q_column+size];
         mapObject.q = q_column;
         mapObject.r = row;
         mapObject.s = -q_column-row;
+
         // console.log(row+size, q_column+size, mapObject);
-        hexes.push(Hex.create({id:mapObject.id, q:q_column, r:row, s:-q_column-row, map:mapObject}));
+
+        hexes.push(Hex.create({
+          id:mapObject.id,
+          q:q_column,
+          r:row,
+          s:-q_column-row,
+          map:mapObject
+        }));
       }
     }
     return hexes;
@@ -343,9 +359,6 @@ export default Component.extend(EKMixin, {
       ctx.lineTo(corners[i].x, corners[i].y);
     }
     ctx.stroke();
-
-    // dan
-    // ctx.addHitRegion({hex: hex});
   },
 
   drawHexTile(ctx, layout, hex) {
@@ -377,7 +390,7 @@ export default Component.extend(EKMixin, {
     ctx.font = "14px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText((hex.map.id + " " + hex.map.m + ":" + hex.map.t), center.x, center.y-7);
+    ctx.fillText((hex.map.id + " " + hex.map.t), center.x, center.y-7);
     ctx.fillText((hex.q + "," + hex.r), center.x, center.y+8);
     // ctx.fillText((hex.id + ": " + hex.q + "," + hex.r + "," + hex.s), center.x, center.y);
     // ctx.fillText(hex.len() === 0? "0: q,r,s" : (hex.id + ": " + hex.q + "," + hex.r + "," + hex.s), center.x, center.y);
@@ -417,7 +430,6 @@ export default Component.extend(EKMixin, {
     for (var q = -size; q <= size; q++) {
       var r1 = Math.max(-size, -q-size);
       var r2 = Math.min(size, -q+size);
-// console.log('shapeHexagon size:',size,'q:', q, 'r1:', r1, 'r2:',r2);
       for (var r = r1; r <= r2; r++) {
         hexes.push(Hex.create({q:q, r:r, s:-q-r, id:id}));
         id++
@@ -504,8 +516,16 @@ export default Component.extend(EKMixin, {
       // console.log('targetHex', targetHex);
 
       console.log('findPath from hex', this.shipHex.id, 'to', targetHex.id);
-      let path = this.mapService.findPath(this.shipHex, targetHex);
+
+      let startFindPathTime = performance.now();
+
+      let path = this.mapService.findPath(this.mapService.twoDimensionalMap, this.shipHex, targetHex);
+
+      var endFindPathTime = performance.now();
+      console.log("Call to findPath took " + (endFindPathTime - startFindPathTime) + " milliseconds.");
+
       console.log('path', path);
+
 
       // let path = this.mapService.findPath(this.mapService.hexMap, this.shipHex, targetHex);
 
