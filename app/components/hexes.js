@@ -17,28 +17,6 @@ import Ship from '../objects/ship';
 
 import { TILEIMAGES, MAP } from '../maps/hex1';
 
-// export const TILEIMAGES = Object.freeze([
-//   "/images/hex/ZeshioHexKitDemo_096.png", // water
-//   "/images/hex/ZeshioHexKitDemo_104.png",  // sand
-//   "/images/hex/ZeshioHexKitDemo_000.png", // lava
-//   "/images/hex/ZeshioHexKitDemo_005.png", // cool lava rock
-//   "/images/hex/ZeshioHexKitDemo_023.png",
-//   "/images/hex/ZeshioHexKitDemo_047.png",
-//   "/images/hex/ZeshioHexKitDemo_102.png", // palm trees
-// ]);
-
-// export const MAP = Object.freeze(
-//   [
-//     [null,                        null,                         null,                         {id:21,col:3,row:0,t:0,m:"w"},{id:28,col:4,row:0,t:0,m:"w"},{id:35,col:5,row:0,t:0,m:"w"},{id:42,col:6,row:0,t:0,m:"w"}],
-//     [null,                        null,                         {id:15,col:2,row:1,t:0,m:"w"},{id:22,col:3,row:1,t:0,m:"w"},{id:29,col:4,row:1,t:0,m:"w"},{id:36,col:5,row:1,t:0,m:"w"},{id:43,col:6,row:1,t:0,m:"w"}],
-//     [null,                        {id:9, col:1,row:2,t:0,m:"w"},{id:16,col:2,row:2,t:0,m:"w"},{id:23,col:3,row:2,t:6,m:"l"},{id:30,col:4,row:2,t:0,m:"w"},{id:37,col:5,row:2,t:0,m:"w"},{id:44,col:6,row:2,t:0,m:"w"}],
-//     [{id:3,col:0,row:3,t:5,m:"l"},{id:10,col:1,row:3,t:2,m:"l"},{id:17,col:2,row:3,t:0,m:"w"},{id:24,col:3,row:3,t:1,m:"l"},{id:31,col:4,row:3,t:0,m:"w"},{id:38,col:5,row:3,t:6,m:"l"},{id:45,col:6,row:3,t:0,m:"w"}],
-//     [{id:4,col:0,row:4,t:0,m:"w"},{id:11,col:1,row:4,t:0,m:"w"},{id:18,col:2,row:4,t:2,m:"l"},{id:25,col:3,row:4,t:3,m:"l"},{id:32,col:4,row:4,t:0,m:"w"},{id:39,col:5,row:4,t:0,m:"w"},null],
-//     [{id:5,col:0,row:5,t:0,m:"w"},{id:12,col:1,row:5,t:0,m:"w"},{id:19,col:2,row:5,t:4,m:"l"},{id:26,col:3,row:5,t:2,m:"l"},{id:33,col:4,row:5,t:0,m:"w"},null,                         null],
-//     [{id:6,col:0,row:6,t:0,m:"w"},{id:13,col:1,row:6,t:4,m:"l"},{id:20,col:2,row:6,t:2,m:"l"},{id:27,col:3,row:6,t:0,m:"w"},null,                         null,                         null]
-//   ]
-// );
-
 // start values must sum to 0
 export const GAME_CONFIG = Object.freeze({
   shipStartQ: 2,
@@ -72,8 +50,12 @@ export default Component.extend(EKMixin, {
   map: MAP,
 
   tileGraphics: [],
+
+  showCenterRect: true,
+
   showTiles: true,
   showShip: true,
+  moveShipOnClick: true,
   tilesLoaded: null,
   shipImage: "images/ship.svg",
 
@@ -109,11 +91,11 @@ export default Component.extend(EKMixin, {
         (GAME_CONFIG.shipStartR === hex.r) &&
         (GAME_CONFIG.shipStartS === hex.s)
     });
-    // console.log('startShipHex', startShipHex);
+    console.log('startShipHex', startShipHex);
 
     this.set('shipHex', startShipHex);
     let shipPoint = this.currentLayout.hexToPixel(startShipHex)
-    // console.log('shipPoint', shipPoint);
+    console.log('shipPoint', shipPoint);
     this.set('shipPoint', shipPoint);
 
 
@@ -154,7 +136,26 @@ export default Component.extend(EKMixin, {
 
   },
 
+  moveShipToHexTask: task(function * (ship, targetHex) {
+    console.log('Moving to', targetHex);
+    this.set('shipHex', targetHex);
+    ship.set('hex', targetHex);
+    yield timeout(300);
+    console.log('done move');
+  }).enqueue(),
 
+  moveShipAlongPath(path) {
+    if (path && path.length) {
+      console.log('Moving ship along path', path);
+      for (let move = 0, pathLen = path.length; move < pathLen; move++) {
+        let nextHex = path[move];
+        let ship = this.ships.objectAt(0);
+        this.moveShipToHexTask.perform(ship, nextHex);
+      }
+      // })
+      console.log('done');
+    }
+  },
 
   // direction: 2
   up: on(keyDown('KeyW'), function() {
@@ -332,9 +333,9 @@ export default Component.extend(EKMixin, {
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
     }
 
-    if (hexes === undefined) {
-      hexes = this.shapeRectangle(15, 15, this.permuteQRS);
-    }
+    // if (hexes === undefined) {
+    //   hexes = this.shapeRectangle(15, 15, this.permuteQRS);
+    // }
 
     ctx.fillStyle = backgroundColor;
     ctx.fillRect(0, 0, width, height);
@@ -344,6 +345,10 @@ export default Component.extend(EKMixin, {
       if (withLabels) this.drawHexLabel(ctx, layout, hex);
       if (withTiles) this.drawHexTile(ctx, layout, hex);
     });
+    if (this.showCenterRect) {
+      ctx.fillStyle = "red"
+      ctx.fillRect(-3, -3, 6, 6);
+    }
   },
 
   drawHex(ctx, layout, hex, fillStyle) {
@@ -452,29 +457,36 @@ export default Component.extend(EKMixin, {
 
       let x = event.clientX - this.centerX;
       let y = event.clientY - this.centerY;
-      console.log('click', this.rect, event, "x:", x, "y:", y);
+      console.log('click centerX', this.centerX, 'centerY', this.centerY, event, "x:", x, "y:", y);
       let point = Point.create({x:x, y:y});
+      console.log('cliked point', point);
+      console.log('this.currentLayout', this.currentLayout);
       let clickedHex = this.currentLayout.pixelToHex(point).round();
 
-      let mappedHex = this.mapService.hexMap.find((hex) => {
-        return (clickedHex.q === hex.q) && (clickedHex.r === hex.r) && (clickedHex.s === hex.s)
-      })
+      let mappedHex = this.mapService.findHexByQRS(clickedHex.q, clickedHex.r, clickedHex.s);
+      // let mappedHex = this.mapService.hexMap.find((hex) => {
+      //   return (clickedHex.q === hex.q) && (clickedHex.r === hex.r) && (clickedHex.s === hex.s)
+      // })
       console.log('mappedHex', mappedHex);
 
       let hexToPixelPoint = this.currentLayout.hexToPixel(clickedHex);
       console.log('point', hexToPixelPoint);
 
-      // TODO Maybe move ship on click
-      if(this.get('moveTask.isIdle')) {
-        let difR =  mappedHex.r < this.shipHex.r ? -1 : (mappedHex.r === this.shipHex.r) ? 0 : 1;
-        let difQ =  mappedHex.q < this.shipHex.q ? -1 : (mappedHex.q === this.shipHex.q) ? 0 : 1;
-
-        console.log(difQ, difR);
-        if (difR !== difQ) {
-          // prevent moving more than one square diagonally
-          this.get('moveTask').perform(difQ, difR);
-        }
+      if(this.moveShipOnClick) {
+        this.get('moveShipToHexTask').cancelAll();
+        let path = this.mapService.findPath(this.mapService.twoDimensionalMap, this.shipHex, mappedHex);
+        this.moveShipAlongPath(path);
       }
+      // if(this.get('moveTask.isIdle')) {
+      //   let difR =  mappedHex.r < this.shipHex.r ? -1 : (mappedHex.r === this.shipHex.r) ? 0 : 1;
+      //   let difQ =  mappedHex.q < this.shipHex.q ? -1 : (mappedHex.q === this.shipHex.q) ? 0 : 1;
+      //
+      //   console.log(difQ, difR);
+      //   if (difR !== difQ) {
+      //     // prevent moving more than one square diagonally
+      //     this.get('moveTask').perform(difQ, difR);
+      //   }
+      // }
 
       console.groupEnd();
     },
@@ -485,6 +497,15 @@ export default Component.extend(EKMixin, {
 
       let point = Point.create({x:x, y:y});
       let thisHex = this.currentLayout.pixelToHex(point).round();
+
+      let targetHex = this.mapService.findHexByQRS(thisHex.q, thisHex.r, thisHex.s);
+
+      if(targetHex) {
+        let pathDistanceToMouseHex = this.mapService.findPath(this.mapService.twoDimensionalMap, this.shipHex, targetHex);
+        this.set('pathDistanceToMouseHex', pathDistanceToMouseHex.length);
+      } else {
+        this.set('pathDistanceToMouseHex', '');
+      }
 
       this.set('mouseXY', `X:${event.clientX} Y:${event.clientY}`);
       this.set('currentHex', `Q:${thisHex.q} R:${thisHex.r} S:${thisHex.s}`);
@@ -507,11 +528,17 @@ export default Component.extend(EKMixin, {
     },
 
     findPath() {
-      let targetHex = this.mapService.hexMap.find((hex) => {
-        return (GAME_CONFIG.tempTargetQ === hex.q) &&
-          (GAME_CONFIG.tempTargetR === hex.r) &&
-          (GAME_CONFIG.tempTargetS === hex.s)
-      });
+      let targetHex = this.mapService.findHexByQRS(
+        GAME_CONFIG.tempTargetQ,
+        GAME_CONFIG.tempTargetR,
+        GAME_CONFIG.tempTargetS
+      );
+
+      // let targetHex = this.mapService.hexMap.find((hex) => {
+      //   return (GAME_CONFIG.tempTargetQ === hex.q) &&
+      //     (GAME_CONFIG.tempTargetR === hex.r) &&
+      //     (GAME_CONFIG.tempTargetS === hex.s)
+      // });
       // console.log('shipHex', this.shipHex);
       // console.log('targetHex', targetHex);
 

@@ -23,8 +23,13 @@
 }
 
 figure {
-  display: flex;
-  text-align: center;
+  text-align: left;
+  display: block;
+  margin-block-start: 0;
+  margin-block-end: 0;
+  margin-inline-start: 0;
+  margin-inline-end: 0;
+
 }
 section>* {
   margin-left: auto;
@@ -32,6 +37,6 @@ section>* {
 }
 
 figure > canvas {
-  flex: 1 1 0;
-  margin: 0.25em;
+  //flex: 1 1 0;
+  margin: 0;
 }

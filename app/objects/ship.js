@@ -7,11 +7,11 @@ export default EmberObject.extend({
 
   style: computed('mapCenterX', 'mapCenterY', 'hex', 'hexLayout', function() {
     if (this.hexLayout && this.hex) {
-// console.log(this.hex);
 // debugger;
       let point = this.hexLayout.hexToPixel(this.hex);
-      let newx = this.mapCenterX + parseFloat(point.x - 8);   // - 30
-      let newy = this.mapCenterY + parseFloat(point.y + 10);  // - 30
+// console.log('ship:', this.mapCenterX, this.mapCenterY, this.hex, point);
+      let newx = this.mapCenterX + parseFloat(point.x - 5);   // - 30
+      let newy = this.mapCenterY + parseFloat(point.y + 7);  // - 30
 
       // console.log('ship hex', this.hex, point, newx, newy);
 

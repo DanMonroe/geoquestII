@@ -7,6 +7,7 @@ import Orientation from './orientation'
 export const LAYOUTS = Object.freeze({
   POINTY:
     Orientation.create({
+      type:'pointy',
       f0:Math.sqrt(3.0),
       f1:Math.sqrt(3.0) / 2.0,
       f2:0.0,
@@ -19,6 +20,7 @@ export const LAYOUTS = Object.freeze({
     }),
   FLAT:
     Orientation.create({
+      type:'flat',
       f0:3.0 / 2.0,
       f1:0.0,
       f2:Math.sqrt(3.0) / 2.0,

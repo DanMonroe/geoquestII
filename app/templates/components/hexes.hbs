@@ -28,7 +28,7 @@
   Mouse X:Y{{input value=mouseXY}}
 </div>
 <div>
-  Mouse Hex: {{input value=currentHex}}
+  Mouse Hex: {{input value=currentHex}} Path Distance: {{pathDistanceToMouseHex}}
 </div>
 <div>
   Ship: {{this.shipHex.q}} {{this.shipHex.r}} {{this.shipHex.s}}
@@ -41,5 +41,8 @@
   <button {{action "findPath"}}>Find Path</button>
 </div>
 <div>
-  [{{#if this.tilesLoaded}}loaded{{/if}}]
+  Move ship on click: {{input type="checkbox" name="moveShipOnClick" checked=this.moveShipOnClick}}
+</div>
+<div>
+  [{{#if this.tilesLoaded}}tiles loaded{{/if}}]
 </div>

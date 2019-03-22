@@ -121,7 +121,7 @@ export default EmberObject.extend({
     if (row < 0 || col < 0) {
       return null;
     }
-    if (row > this.grid.length) {
+    if (row >= this.grid.length) {
     // if (row > this.gridIn.length) {
       return null;
     }

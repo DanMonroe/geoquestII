@@ -3,6 +3,7 @@ import { A as emberArray } from '@ember/array';
 import {inject as service} from '@ember/service';
 import BinaryHeap from '../objects/binary-heap';
 import Graph from '../objects/graph';
+import { GAME_CONFIG } from '../components/hexes'
 
 export default Service.extend({
 
@@ -255,5 +256,12 @@ export default Service.extend({
   // console.log('foundNode', foundNode);
     return foundNode;
   },
+
+  findHexByQRS(Q, R, S) {
+    let hex = this.hexMap.find((hex) => {
+      return (Q === hex.q) && (R === hex.r) && (S === hex.s);
+    });
+    return hex;
+  }
 
 });

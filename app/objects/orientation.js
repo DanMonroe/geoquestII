@@ -1,7 +1,9 @@
 import EmberObject from '@ember/object';
 
 export default EmberObject.extend({
-  name: 'Map',
+  name: 'Orientation',
+
+  type: null,
   f0:null,
   f1:null,
   f2:null,
